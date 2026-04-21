@@ -1,0 +1,30 @@
+name: Deploy via Docker Hub
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Supabase CLI via Docker
+      run: |
+        # Use official Supabase CLI Docker image
+        docker run --rm \
+          -v $(pwd):/workspace \
+          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
+          supabase/cli:latest \
+          /bin/sh -c "
+            cd /workspace/supabase
+            supabase link --project-ref lftlvycvgauzrryyqxpu
+            supabase db push
+          "
