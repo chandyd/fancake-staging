@@ -17,14 +17,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Supabase CLI
+    - name: Setup Supabase CLI via Docker
       run: |
-        # Install using official Supabase method
-        curl -fsSL https://supabase.com/docs/scripts/install.sh | sh
-        echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+        # Use Docker container with Supabase CLI pre-installed
+        docker run --rm -v $(pwd):/workspace -w /workspace \
+          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
+          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
+          supabase/cli:latest version
     
-    - name: Deploy Migrations
+    - name: Deploy Migrations with Docker
       run: |
         cd supabase
-        supabase link --project-ref lftlvycvgauzrryyqxpu
-        supabase db push
+        docker run --rm -v $(pwd):/workspace -w /workspace \
+          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
+          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
+          supabase/cli:latest link --project-ref lftlvycvgauzrryyqxpu
+        
+        docker run --rm -v $(pwd):/workspace -w /workspace \
+          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
+          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
+          supabase/cli:latest db push
