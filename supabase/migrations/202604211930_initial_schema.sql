@@ -1,3 +1,4 @@
+-- Auto-deployed via GitHub Actions on 2026-04-21
 -- Migration 001: Initial Schema for FanCake Staging
 -- Created: 2026-04-21
 -- Strategy: Option B (Incremental migrations)

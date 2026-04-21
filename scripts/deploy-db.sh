@@ -8,7 +8,7 @@ echo "=== DEPLOY DATABASE FANCAKE ==="
 # Verifica Supabase CLI
 if ! command -v supabase &> /dev/null; then
   echo "Installing Supabase CLI..."
-  curl -fsSL https://github.com/supabase/cli/raw/main/install.sh | sh
+  npm install -g supabase@latest
 fi
 
 # Link al progetto
@@ -20,3 +20,6 @@ echo "Deploying migrations..."
 supabase db push
 
 echo "✅ Database deployed successfully!"
+
+echo "\n📊 Database tables created:"
+supabase db dump --schema-only | grep "CREATE TABLE" | wc -l | xargs echo "Total tables:"
