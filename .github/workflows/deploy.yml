@@ -1,0 +1,52 @@
+name: Deploy Database
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+    
+    - name: Deploy Database Schema
+      run: |
+        echo "Deploying FanCake database schema..."
+        
+        # Connection details
+        DB_HOST="aws-0-us-east-1.pooler.supabase.com"
+        DB_PORT="6543"
+        DB_USER="postgres.lftlvycvgauzrryyqxpu"
+        DB_NAME="postgres"
+        SQL_FILE="supabase/migrations/202604211930_initial_schema.sql"
+        
+        # Test connection
+        echo "Testing connection..."
+        if PGPASSWORD="$SUPABASE_DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT version();" 2>/dev/null; then
+          echo "✅ Connection successful"
+        else
+          echo "❌ Connection failed"
+          echo "Please check:"
+          echo "1. Password in GitHub Secrets"
+          echo "2. Username format"
+          echo "3. Network connectivity"
+          exit 1
+        fi
+        
+        # Deploy schema
+        echo "Deploying schema..."
+        PGPASSWORD="$SUPABASE_DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$SQL_FILE"
+        
+        echo "✅ Database deployed successfully!"
