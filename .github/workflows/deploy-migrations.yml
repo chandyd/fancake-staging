@@ -17,27 +17,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Supabase CLI (Binary Download)
+    - name: Setup Supabase CLI (Correct Binary)
       run: |
-        # Download Supabase CLI binary directly
-        ARCH=$(uname -m)
-        if [ "$ARCH" = "x86_64" ]; then
-          ARCH="amd64"
-        elif [ "$ARCH" = "aarch64" ]; then
-          ARCH="arm64"
-        fi
-        
-        # Download from GitHub Releases
-        VERSION="1.192.0"  # Latest stable
-        URL="https://github.com/supabase/cli/releases/download/v${VERSION}/supabase_${VERSION}_linux_${ARCH}.tar.gz"
-        
-        echo "Downloading Supabase CLI from: $URL"
-        curl -L "$URL" -o supabase.tar.gz
+        # CORRECT URL from GitHub Releases
+        # https://github.com/supabase/cli/releases
+        curl -L https://github.com/supabase/cli/releases/download/v1.192.0/supabase_1.192.0_linux_amd64.tar.gz -o supabase.tar.gz
         tar -xzf supabase.tar.gz
         chmod +x supabase
         sudo mv supabase /usr/local/bin/
-        
-        # Verify installation
         supabase --version
     
     - name: Deploy Migrations
