@@ -16,9 +16,9 @@ jobs:
     
     - name: Setup Supabase CLI
       run: |
-        # Install Supabase CLI via npm (more reliable)
-        npm install -g supabase@latest
-        echo "$(npm root -g)/supabase/bin" >> $GITHUB_PATH
+        # Install Supabase CLI using official method
+        curl -fsSL https://github.com/supabase/cli/raw/refs/heads/main/install.sh | sh
+        echo "$HOME/.supabase/bin" >> $GITHUB_PATH
     
     - name: Deploy Migrations
       env:

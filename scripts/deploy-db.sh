@@ -8,7 +8,7 @@ echo "=== DEPLOY DATABASE FANCAKE ==="
 # Verifica Supabase CLI
 if ! command -v supabase &> /dev/null; then
   echo "Installing Supabase CLI..."
-  npm install -g supabase@latest
+  curl -fsSL https://github.com/supabase/cli/raw/refs/heads/main/install.sh | sh
 fi
 
 # Link al progetto
