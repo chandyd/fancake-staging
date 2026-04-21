@@ -1,0 +1,13 @@
+[project]
+id = "lftlvycvgauzrryyqxpu"
+
+[auth]
+site_url = "https://fancake-staging.vercel.app"
+additional_redirect_urls = []
+
+[api]
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+
+[storage]
+file_size_limit = 52428800
