@@ -17,23 +17,36 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Supabase CLI via Docker
+    - name: Setup Supabase CLI (Binary Download)
       run: |
-        # Use Docker container with Supabase CLI pre-installed
-        docker run --rm -v $(pwd):/workspace -w /workspace \
-          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
-          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
-          supabase/cli:latest version
+        # Download Supabase CLI binary directly
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "x86_64" ]; then
+          ARCH="amd64"
+        elif [ "$ARCH" = "aarch64" ]; then
+          ARCH="arm64"
+        fi
+        
+        # Download from GitHub Releases
+        VERSION="1.192.0"  # Latest stable
+        URL="https://github.com/supabase/cli/releases/download/v${VERSION}/supabase_${VERSION}_linux_${ARCH}.tar.gz"
+        
+        echo "Downloading Supabase CLI from: $URL"
+        curl -L "$URL" -o supabase.tar.gz
+        tar -xzf supabase.tar.gz
+        chmod +x supabase
+        sudo mv supabase /usr/local/bin/
+        
+        # Verify installation
+        supabase --version
     
-    - name: Deploy Migrations with Docker
+    - name: Deploy Migrations
       run: |
         cd supabase
-        docker run --rm -v $(pwd):/workspace -w /workspace \
-          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
-          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
-          supabase/cli:latest link --project-ref lftlvycvgauzrryyqxpu
+        echo "Linking to project..."
+        supabase link --project-ref lftlvycvgauzrryyqxpu
         
-        docker run --rm -v $(pwd):/workspace -w /workspace \
-          -e SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" \
-          -e SUPABASE_DB_PASSWORD="$SUPABASE_DB_PASSWORD" \
-          supabase/cli:latest db push
+        echo "Deploying migrations..."
+        supabase db push
+        
+        echo "✅ Database deployed!"
