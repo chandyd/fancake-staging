@@ -1,6 +1,6 @@
 // FanCake Staging Frontend
 const SUPABASE_URL = 'https://lftlvycvgauzrryyqxpu.supabase.co';
-const SUPABASE_ANON_KEY = 'ANON_KEY_HERE'; // Replace with actual anon key
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s'; // Replace with actual anon key
 
 // Initialize Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -219,4 +219,4 @@ searchInput.addEventListener('keypress', (e) => {
 
 console.log('FanCake Staging Frontend loaded successfully!');
 console.log('API URL:', SUPABASE_URL);
-console.log('Replace ANON_KEY_HERE with your actual Supabase anon key');
+console.log('Replace eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s with your actual Supabase anon key');
