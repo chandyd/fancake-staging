@@ -1,0 +1,522 @@
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reader Interface -->
+        <section id="reader" class="mb-5" style="display: none;">
+            <div class="reader-controls mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-secondary" id="closeReader">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Library
+                    </button>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary" id="fontSmaller">
+                                <i class="fas fa-font"></i> -
+                            </button>
+                            <button class="btn btn-outline-secondary" id="fontReset">
+                                Aa
+                            </button>
+                            <button class="btn btn-outline-secondary" id="fontLarger">
+                                <i class="fas fa-font"></i> +
+                            </button>
+                        </div>
+                        <button class="btn btn-outline-secondary" id="darkModeToggle">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" id="fullscreenToggle">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="reader-container" id="readerContent">
+                <!-- Chapter content will be loaded here -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading chapter...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-primary" id="prevChapter">
+                    <i class="fas fa-chevron-left me-2"></i>Previous Chapter
+                </button>
+                <div class="text-center">
+                    <small class="text-muted">Chapter 3 of 12</small>
+                </div>
+                <button class="btn btn-primary" id="nextChapter">
+                    Next Chapter <i class="fas fa-chevron-right ms-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Author Dashboard -->
+        <section id="author-dashboard" class="mb-5" style="display: none;">
+            <h2 class="fw-bold mb-4">Author Dashboard</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary">3</h3>
+                            <p class="text-muted mb-0">Books Published</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary">15,240</h3>
+                            <p class="text-muted mb-0">Total Reads</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary">€1,245</h3>
+                            <p class="text-muted mb-0">Earnings</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <h3 class="text-primary">4.8</h3>
+                            <p class="text-muted mb-0">Avg Rating</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+                <h4>My Books</h4>
+                <button class="btn btn-primary" id="createNewBook">
+                    <i class="fas fa-plus me-2"></i>Create New Book
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Reads</th>
+                            <th>Earnings</th>
+                            <th>Rating</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="authorBooksTable">
+                        <!-- Books will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-book-open me-2"></i>FanCake Reads
+                    </h5>
+                    <p class="text-light">A digital publishing platform for creators and readers. Share your stories, build your audience, and earn from your creativity.</p>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold">For Readers</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Discover Books</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Reading Lists</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Book Clubs</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Gift Cards</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold">For Authors</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">Publishing Guide</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Monetization</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Author Resources</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Community</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold">Stay Updated</h6>
+                    <p class="text-light mb-3">Subscribe to our newsletter for new releases and updates.</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Your email">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2026 FanCake Reads. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-light text-decoration-none me-3">Terms</a>
+                    <a href="#" class="text-light text-decoration-none me-3">Privacy</a>
+                    <a href="#" class="text-light text-decoration-none">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase configuration
+        const supabaseUrl = 'https://lftlvycvgauzrryyqxpu.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        
+        // State management
+        let currentUser = null;
+        let currentBook = null;
+        let currentChapter = null;
+        let books = [];
+        
+        // DOM Elements
+        const booksGrid = document.getElementById('booksGrid');
+        const readerSection = document.getElementById('reader');
+        const authorDashboard = document.getElementById('author-dashboard');
+        const adminLink = document.getElementById('adminLink');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadBooks();
+            setupEventListeners();
+        });
+        
+        // Check authentication
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser();
+            currentUser = user;
+            
+            if (currentUser) {
+                // Check if user is admin
+                const { data: adminData } = await supabase
+                    .from('admin_users')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (adminData) {
+                    adminLink.style.display = 'block';
+                }
+            }
+        }
+        
+        // Load books from database
+        async function loadBooks() {
+            try {
+                const { data, error } = await supabase
+                    .from('books')
+                    .select('*')
+                    .eq('status', 'published')
+                    .order('created_at', { ascending: false })
+                    .limit(12);
+                
+                if (error) throw error;
+                
+                books = data || [];
+                renderBooks(books);
+            } catch (error) {
+                console.error('Error loading books:', error);
+                booksGrid.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error loading books. Please try again later.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render books grid
+        function renderBooks(booksToRender) {
+            if (booksToRender.length === 0) {
+                booksGrid.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No books found. Be the first to publish!
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            booksGrid.innerHTML = booksToRender.map(book => `
+                <div class="col-md-4 col-lg-3">
+                    <div class="card book-card h-100">
+                        <img src="${book.cover_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=450&fit=crop'}" 
+                             class="card-img-top book-cover" alt="${book.title}">
+                        <div class="card-body">
+                            <h5 class="card-title">${book.title}</h5>
+                            <p class="card-text text-muted small">${book.subtitle || ''}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary">${book.genre}</span>
+                                <small class="text-muted">${book.word_count ? Math.floor(book.word_count/1000) + 'k words' : ''}</small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <small class="ms-1">${book.average_rating?.toFixed(1) || 'N/A'}</small>
+                                </div>
+                                <div>
+                                    <i class="fas fa-eye text-muted"></i>
+                                    <small class="ms-1">${book.view_count || 0}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <button class="btn btn-outline-primary btn-sm w-100" onclick="openBook('${book.id}')">
+                                <i class="fas fa-book-open me-2"></i>Read Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Open book reader
+        window.openBook = async function(bookId) {
+            try {
+                // Get book details
+                const { data: book, error: bookError } = await supabase
+                    .from('books')
+                    .select('*')
+                    .eq('id', bookId)
+                    .single();
+                
+                if (bookError) throw bookError;
+                
+                currentBook = book;
+                
+                // Get first chapter
+                const { data: chapters, error: chaptersError } = await supabase
+                    .from('chapters')
+                    .select('*')
+                    .eq('book_id', bookId)
+                    .eq('status', 'published')
+                    .order('chapter_number', { ascending: true })
+                    .limit(1);
+                
+                if (chaptersError) throw chaptersError;
+                
+                if (chapters.length > 0) {
+                    currentChapter = chapters[0];
+                    await openChapter(currentChapter.id);
+                }
+                
+                // Show reader, hide other sections
+                document.querySelectorAll('section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                readerSection.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error opening book:', error);
+                alert('Error loading book. Please try again.');
+            }
+        };
+        
+        // Open chapter
+        async function openChapter(chapterId) {
+            try {
+                const { data: chapter, error } = await supabase
+                    .from('chapters')
+                    .select('*')
+                    .eq('id', chapterId)
+                    .single();
+                
+                if (error) throw error;
+                
+                currentChapter = chapter;
+                
+                // Update reader content
+                const readerContent = document.getElementById('readerContent');
+                readerContent.innerHTML = `
+                    <div class="text-center mb-5">
+                        <h2 class="mb-3">${chapter.title}</h2>
+                        <p class="text-muted">Chapter ${chapter.chapter_number}</p>
+                    </div>
+                    <div class="chapter-content">
+                        ${chapter.content_html || formatPlainText(chapter.content)}
+                    </div>
+                `;
+                
+                // Record reading progress
+                if (currentUser && currentBook) {
+                    await supabase.from('reading_progress').upsert({
+                        user_id: currentUser.id,
+                        book_id: currentBook.id,
+                        chapter_id: chapterId,
+                        current_page: 1,
+                        last_read_at: new Date().toISOString(),
+                        is_currently_reading: true
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error opening chapter:', error);
+            }
+        }
+        
+        // Format plain text for display
+        function formatPlainText(text) {
+            return text.split('\n').map(paragraph => {
+                if (paragraph.trim() === '') return '<br>';
+                return `<p>${paragraph}</p>`;
+            }).join('');
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Close reader
+            document.getElementById('closeReader').addEventListener('click', () => {
+                readerSection.style.display = 'none';
+                document.querySelectorAll('section').forEach(section => {
+                    if (section.id !== 'reader') {
+                        section.style.display = 'block';
+                    }
+                });
+            });
+            
+            // Font controls
+            let fontSize = 16;
+            const readerContent = document.getElementById('readerContent');
+            
+            document.getElementById('fontSmaller').addEventListener('click', () => {
+                fontSize = Math.max(12, fontSize - 1);
+                readerContent.style.fontSize = `${fontSize}px`;
+            });
+            
+            document.getElementById('fontReset').addEventListener('click', () => {
+                fontSize = 16;
+                readerContent.style.fontSize = `${fontSize}px`;
+            });
+            
+            document.getElementById('fontLarger').addEventListener('click', () => {
+                fontSize = Math.min(24, fontSize + 1);
+                readerContent.style.fontSize = `${fontSize}px`;
+            });
+            
+            // Dark mode toggle
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                document.body.classList.toggle('bg-dark');
+                document.body.classList.toggle('text-light');
+                readerContent.classList.toggle('text-light');
+            });
+            
+            // Fullscreen toggle
+            document.getElementById('fullscreenToggle').addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+            
+            // Navigation
+            document.getElementById('prevChapter').addEventListener('click', async () => {
+                if (!currentBook || !currentChapter) return;
+                
+                const { data: prevChapter } = await supabase
+                    .from('chapters')
+                    .select('*')
+                    .eq('book_id', currentBook.id)
+                    .eq('chapter_number', currentChapter.chapter_number - 1)
+                    .single();
+                
+                if (prevChapter) {
+                    await openChapter(prevChapter.id);
+                }
+            });
+            
+            document.getElementById('nextChapter').addEventListener('click', async () => {
+                if (!currentBook || !currentChapter) return;
+                
+                const { data: nextChapter } = await supabase
+                    .from('chapters')
+                    .select('*')
+                    .eq('book_id', currentBook.id)
+                    .eq('chapter_number', currentChapter.chapter_number + 1)
+                    .single();
+                
+                if (nextChapter) {
+                    await openChapter(nextChapter.id);
+                }
+            });
+            
+            // Filter books by genre
+            document.querySelectorAll('[data-filter]').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('[data-filter]').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const filteredBooks = filter === 'all' 
+                        ? books 
+                        : books.filter(book => book.genre === filter);
+                    
+                    renderBooks(filteredBooks);
+                });
+            });
+            
+            // Admin link
+            adminLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'admin.html';
+            });
+        }
+        
+        // Login function
+        window.login = async function() {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            });
+            
+            if (error) {
+                alert('Login failed: ' + error.message);
+            } else {
+                alert('Login successful!');
+                location.reload();
+            }
+        };
+        
+        // Signup function
+        window.signup = async function() {
+            const { data, error } = await supabase.auth.signUp({
+                email: document.getElementById('signupEmail').value,
+                password: document.getElementById('signupPassword').value
+            });
+            
+            if (error) {
+                alert('Signup failed: ' + error.message);
+            } else {
+                alert('Signup successful! Please check your email for confirmation.');
+            }
+        };
+    </script>
+</body>
+</html>
