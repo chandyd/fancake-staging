@@ -1,0 +1,222 @@
+// FanCake Staging Frontend
+const SUPABASE_URL = 'https://lftlvycvgauzrryyqxpu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s'; // Replace with actual anon key
+
+// Initialize Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// DOM Elements
+const mediaContainer = document.getElementById('mediaContainer');
+const creatorsContainer = document.getElementById('creatorsContainer');
+const searchInput = document.getElementById('searchInput');
+
+// Load initial data
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadMedia();
+    await loadCreators();
+});
+
+// Load media from API
+async function loadMedia() {
+    try {
+        const { data, error } = await supabase
+            .from('media')
+            .select('id, title, description, media_type, filename, user_id, view_count, like_count, published_at')
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+            .limit(6);
+
+        if (error) throw error;
+
+        mediaContainer.innerHTML = '';
+        
+        if (data.length === 0) {
+            mediaContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No media yet. Be the first creator!
+                    </div>
+                </div>`;
+            return;
+        }
+
+        data.forEach(media => {
+            const mediaCard = createMediaCard(media);
+            mediaContainer.innerHTML += mediaCard;
+        });
+    } catch (error) {
+        console.error('Error loading media:', error);
+        mediaContainer.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error loading media. Check console.
+                </div>
+            </div>`;
+    }
+}
+
+// Load creators from API
+async function loadCreators() {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, username, display_name, is_verified, is_featured, bio, follower_count')
+            .eq('is_creator', true)
+            .order('follower_count', { ascending: false })
+            .limit(5);
+
+        if (error) throw error;
+
+        creatorsContainer.innerHTML = '';
+        
+        if (data.length === 0) {
+            creatorsContainer.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No creators yet.
+                </div>`;
+            return;
+        }
+
+        data.forEach(creator => {
+            const creatorCard = createCreatorCard(creator);
+            creatorsContainer.innerHTML += creatorCard;
+        });
+    } catch (error) {
+        console.error('Error loading creators:', error);
+        creatorsContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error loading creators.
+            </div>`;
+    }
+}
+
+// Search function
+async function search() {
+    const query = searchInput.value.trim();
+    if (!query) return;
+
+    try {
+        // Use the search_media function
+        const { data, error } = await supabase.rpc('search_media', {
+            search_query: query,
+            limit_val: 10
+        });
+
+        if (error) throw error;
+
+        mediaContainer.innerHTML = '';
+        
+        if (data.length === 0) {
+            mediaContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-search"></i> No results found for "${query}"
+                    </div>
+                </div>`;
+            return;
+        }
+
+        data.forEach(media => {
+            const mediaCard = createMediaCard(media);
+            mediaContainer.innerHTML += mediaCard;
+        });
+
+        // Update search results title
+        const title = document.querySelector('h3');
+        if (title) {
+            title.innerHTML = `<i class="bi bi-search"></i> Search Results for "${query}"`;
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        alert('Search failed. Check console for details.');
+    }
+}
+
+// Create media card HTML
+function createMediaCard(media) {
+    const mediaTypeIcon = getMediaTypeIcon(media.media_type);
+    const publishedDate = new Date(media.published_at).toLocaleDateString();
+    
+    return `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card media-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-primary me-2">${mediaTypeIcon} ${media.media_type}</span>
+                        <small class="text-muted">${publishedDate}</small>
+                    </div>
+                    <h5 class="card-title">${media.title}</h5>
+                    <p class="card-text text-muted small">${media.description ? media.description.substring(0, 100) + '...' : 'No description'}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="me-3"><i class="bi bi-eye"></i> ${media.view_count}</span>
+                            <span><i class="bi bi-heart"></i> ${media.like_count}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewMedia('${media.id}')">
+                            View <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+}
+
+// Create creator card HTML
+function createCreatorCard(creator) {
+    const verifiedBadge = creator.is_verified ? '<span class="badge bg-success ms-1"><i class="bi bi-check-circle"></i> Verified</span>' : '';
+    const featuredBadge = creator.is_featured ? '<span class="badge bg-warning ms-1"><i class="bi bi-star"></i> Featured</span>' : '';
+    
+    return `
+        <div class="card mb-3 creator-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-person text-white" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">${creator.display_name || creator.username} ${verifiedBadge} ${featuredBadge}</h6>
+                        <small class="text-muted">@${creator.username}</small>
+                        <p class="mb-0 small">${creator.bio ? creator.bio.substring(0, 60) + '...' : 'Creator'}</p>
+                        <small><i class="bi bi-people"></i> ${creator.follower_count} followers</small>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+}
+
+// Helper function for media type icons
+function getMediaTypeIcon(type) {
+    const icons = {
+        'image': 'bi-image',
+        'video': 'bi-play-circle',
+        'audio': 'bi-music-note-beamed',
+        'live_stream': 'bi-broadcast'
+    };
+    return `<i class="bi ${icons[type] || 'bi-file-earmark'}"></i>`;
+}
+
+// Placeholder functions for future implementation
+function login() {
+    alert('Login functionality will be implemented with Supabase Auth');
+}
+
+function signup() {
+    alert('Sign up functionality will be implemented with Supabase Auth');
+}
+
+function viewMedia(id) {
+    alert(`View media ${id} - To be implemented`);
+}
+
+// Allow Enter key for search
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        search();
+    }
+});
+
+console.log('FanCake Staging Frontend loaded successfully!');
+console.log('API URL:', SUPABASE_URL);
+console.log('Replace eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s with your actual Supabase anon key');
