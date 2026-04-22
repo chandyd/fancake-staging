@@ -209,7 +209,7 @@ CREATE TABLE subscriptions (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
   -- One active subscription per plan per user
-  UNIQUE(plan_id, subscriber_id) WHERE status = 'active'
+  UNIQUE(plan_id, subscriber_id)
 );
 
 -- Bookings for private calls (REAL: video/audio calls)
@@ -339,6 +339,7 @@ CREATE INDEX idx_tips_created ON tips(created_at DESC);
 -- Subscriptions indexes
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_period ON subscriptions(current_period_end) WHERE status = 'active';
+CREATE UNIQUE INDEX idx_subscriptions_active_unique ON subscriptions(plan_id, subscriber_id) WHERE status = 'active';
 
 -- Likes indexes
 CREATE INDEX idx_likes_media ON likes(media_id);
