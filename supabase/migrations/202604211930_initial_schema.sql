@@ -157,11 +157,7 @@ CREATE TABLE tips (
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  completed_at TIMESTAMPTZ,
-  
-  -- Indexes
-  INDEX idx_tips_to_user ON tips(to_user_id),
-  INDEX idx_tips_status ON tips(status)
+  completed_at TIMESTAMPTZ
 );
 
 -- Subscription plans (REAL: different membership tiers)
@@ -251,16 +247,16 @@ CREATE TABLE bookings (
   review TEXT,
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  -- Indexes
-  INDEX idx_bookings_creator ON bookings(creator_id, scheduled_for),
-  INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for)
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ====================
 -- SOCIAL INTERACTION TABLES
 -- ====================
+
+-- Follows indexes
+CREATE INDEX idx_follows_follower ON follows(follower_id);
+CREATE INDEX idx_follows_following ON follows(following_id);
 
 -- Follows table
 CREATE TABLE follows (
@@ -268,11 +264,7 @@ CREATE TABLE follows (
   following_id UUID REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   
-  PRIMARY KEY (follower_id, following_id),
-  
-  -- Indexes
-  INDEX idx_follows_follower ON follows(follower_id),
-  INDEX idx_follows_following ON follows(following_id)
+  PRIMARY KEY (follower_id, following_id)
 );
 
 -- Likes table
@@ -281,10 +273,7 @@ CREATE TABLE likes (
   media_id UUID REFERENCES media(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   
-  PRIMARY KEY (user_id, media_id),
-  
-  -- Indexes
-  INDEX idx_likes_media ON likes(media_id)
+  PRIMARY KEY (user_id, media_id)
 );
 
 -- Comments table
@@ -302,12 +291,7 @@ CREATE TABLE comments (
   hidden_reason TEXT,
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  -- Indexes
-  INDEX idx_comments_media ON comments(media_id),
-  INDEX idx_comments_user ON comments(user_id),
-  INDEX idx_comments_parent ON comments(parent_id)
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ====================
@@ -329,11 +313,7 @@ CREATE TABLE notifications (
   is_read BOOLEAN DEFAULT FALSE,
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  read_at TIMESTAMPTZ,
-  
-  -- Indexes
-  INDEX idx_notifications_user ON notifications(user_id, created_at DESC),
-  INDEX idx_notifications_unread ON notifications(user_id) WHERE NOT is_read
+  read_at TIMESTAMPTZ
 );
 
 -- ====================
@@ -356,13 +336,29 @@ CREATE INDEX idx_media_exclusive ON media(is_exclusive) WHERE is_exclusive = TRU
 CREATE INDEX idx_media_search ON media USING GIN(search_vector);
 
 -- Tips indexes
+CREATE INDEX idx_tips_to_user ON tips(to_user_id);
+CREATE INDEX idx_tips_status ON tips(status);
 CREATE INDEX idx_tips_created ON tips(created_at DESC);
 
 -- Subscriptions indexes
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_period ON subscriptions(current_period_end) WHERE status = 'active';
 
--- Bookings indexes  
+-- Likes indexes
+CREATE INDEX idx_likes_media ON likes(media_id);
+
+-- Comments indexes
+CREATE INDEX idx_comments_media ON comments(media_id);
+CREATE INDEX idx_comments_user ON comments(user_id);
+CREATE INDEX idx_comments_parent ON comments(parent_id);
+
+-- Notifications indexes
+CREATE INDEX idx_notifications_user ON notifications(user_id, created_at DESC);
+CREATE INDEX idx_notifications_unread ON notifications(user_id) WHERE NOT is_read;
+
+-- Bookings indexes
+CREATE INDEX idx_bookings_creator ON bookings(creator_id, scheduled_for);
+CREATE INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for);
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
 
