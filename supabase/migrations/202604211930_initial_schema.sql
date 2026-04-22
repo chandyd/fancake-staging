@@ -18,56 +18,56 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table (extends Laravel's default users)
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  
+
   -- Laravel authentication fields
   email VARCHAR(255) UNIQUE NOT NULL,
   email_verified_at TIMESTAMPTZ,
   password VARCHAR(255) NOT NULL,
   remember_token VARCHAR(100),
-  
+
   -- Profile fields
   username VARCHAR(50) UNIQUE NOT NULL,
   display_name VARCHAR(100),
-  
+
   -- Creator status (REAL: verified badge, featured badge)
   is_creator BOOLEAN DEFAULT FALSE,
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
-  
+
   -- Assets (REAL: /assets/avatar/{size}/{filename})
   avatar_filename TEXT DEFAULT 'default-avatar.png',
   cover_filename TEXT,
-  
+
   -- Bio and links
   bio TEXT,
   website TEXT,
   social_links JSONB DEFAULT '{}',
-  
+
   -- Stats (REAL: follower counts, media counts)
   follower_count INTEGER DEFAULT 0,
   following_count INTEGER DEFAULT 0,
   image_count INTEGER DEFAULT 0,
   video_count INTEGER DEFAULT 0,
   audio_count INTEGER DEFAULT 0,
-  
+
   -- Monetization (REAL: Stripe integration)
   stripe_customer_id TEXT,
   stripe_account_id TEXT, -- For creator payouts
   wallet_balance DECIMAL(10,2) DEFAULT 0.00,
   total_earnings DECIMAL(10,2) DEFAULT 0.00,
-  
+
   -- Settings
   settings JSONB DEFAULT '{
     "notifications": true,
     "privacy": "public",
     "language": "en"
   }',
-  
+
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   last_seen_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   -- Performance indexes
   CONSTRAINT valid_username CHECK (username ~ '^[a-zA-Z0-9_]{3,50}$'),
   CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
@@ -81,32 +81,32 @@ CREATE TABLE users (
 CREATE TABLE media (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  
+
   -- Content metadata
   title VARCHAR(255) NOT NULL,
   description TEXT,
   tags TEXT[] DEFAULT '{}',
-  
+
   -- Media type (REAL: images, videos, audio, live_stream)
   media_type VARCHAR(20) NOT NULL CHECK (media_type IN ('image', 'video', 'audio', 'live_stream')),
-  
+
   -- File info (REAL: assets/{type}/{size}/{filename})
   filename TEXT NOT NULL,
   file_size INTEGER,
   mime_type VARCHAR(100),
   duration INTEGER, -- seconds for video/audio
   thumbnail_filename TEXT,
-  
+
   -- Monetization (REAL: exclusive content, tips, memberships)
   is_exclusive BOOLEAN DEFAULT FALSE,
   access_type VARCHAR(20) DEFAULT 'free' CHECK (access_type IN ('free', 'tip', 'subscription', 'membership')),
   price DECIMAL(10,2),
   currency VARCHAR(3) DEFAULT 'EUR',
-  
+
   -- Status
   status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'private', 'archived')),
   is_pinned BOOLEAN DEFAULT FALSE,
-  
+
   -- Stats
   view_count INTEGER DEFAULT 0,
   like_count INTEGER DEFAULT 0,
@@ -114,13 +114,13 @@ CREATE TABLE media (
   tip_count INTEGER DEFAULT 0,
   tip_amount DECIMAL(10,2) DEFAULT 0.00,
   share_count INTEGER DEFAULT 0,
-  
+
   -- Timestamps
   published_at TIMESTAMPTZ,
   scheduled_for TIMESTAMPTZ, -- For scheduled posts/live streams
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   -- Full-text search
   search_vector TSVECTOR GENERATED ALWAYS AS (
     setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
@@ -139,23 +139,23 @@ CREATE TABLE tips (
   from_user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   to_user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   media_id UUID REFERENCES media(id) ON DELETE SET NULL,
-  
+
   -- Tip info
   amount DECIMAL(10,2) NOT NULL,
   currency VARCHAR(3) DEFAULT 'EUR',
   message TEXT,
   is_anonymous BOOLEAN DEFAULT FALSE,
-  
+
   -- Stripe payment
   stripe_payment_id TEXT UNIQUE,
   stripe_payment_intent_id TEXT,
   stripe_fee DECIMAL(10,2),
   platform_fee DECIMAL(10,2),
   creator_amount DECIMAL(10,2),
-  
+
   -- Status
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   completed_at TIMESTAMPTZ
 );
@@ -164,24 +164,24 @@ CREATE TABLE tips (
 CREATE TABLE subscription_plans (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   creator_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  
+
   -- Plan details
   name VARCHAR(100) NOT NULL,
   description TEXT,
   monthly_amount DECIMAL(10,2) NOT NULL,
   currency VARCHAR(3) DEFAULT 'EUR',
-  
+
   -- Features
   features JSONB DEFAULT '[]',
   is_active BOOLEAN DEFAULT TRUE,
   position INTEGER DEFAULT 0,
-  
+
   -- Stripe
   stripe_price_id TEXT,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   UNIQUE(creator_id, name)
 );
 
@@ -190,24 +190,24 @@ CREATE TABLE subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   plan_id UUID REFERENCES subscription_plans(id) ON DELETE CASCADE NOT NULL,
   subscriber_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  
+
   -- Stripe subscription
   stripe_subscription_id TEXT UNIQUE,
   stripe_customer_id TEXT,
-  
+
   -- Status
   status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due', 'unpaid', 'incomplete')),
-  
+
   -- Dates
   start_date TIMESTAMPTZ DEFAULT NOW(),
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
   canceled_at TIMESTAMPTZ,
   trial_end TIMESTAMPTZ,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   -- One active subscription per plan per user
   UNIQUE(plan_id, subscriber_id) WHERE status = 'active'
 );
@@ -217,35 +217,35 @@ CREATE TABLE bookings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   creator_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
   fan_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  
+
   -- Booking type (REAL: video call, audio call, live stream)
   booking_type VARCHAR(20) NOT NULL CHECK (booking_type IN ('video_call', 'audio_call', 'live_stream')),
-  
+
   -- Scheduling
   scheduled_for TIMESTAMPTZ NOT NULL,
   duration_minutes INTEGER NOT NULL,
   timezone VARCHAR(50) DEFAULT 'UTC',
-  
+
   -- Pricing
   amount DECIMAL(10,2) NOT NULL,
   currency VARCHAR(3) DEFAULT 'EUR',
-  
+
   -- Status
   status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'canceled', 'no_show')),
-  
+
   -- Stripe payment
   stripe_payment_id TEXT,
-  
+
   -- Meeting info
   meeting_url TEXT,
   meeting_id TEXT,
   meeting_password TEXT,
   meeting_notes TEXT,
-  
+
   -- Ratings
   rating INTEGER CHECK (rating >= 1 AND rating <= 5),
   review TEXT,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -254,16 +254,12 @@ CREATE TABLE bookings (
 -- SOCIAL INTERACTION TABLES
 -- ====================
 
--- Follows indexes
-CREATE INDEX idx_follows_follower ON follows(follower_id);
-CREATE INDEX idx_follows_following ON follows(following_id);
-
 -- Follows table
 CREATE TABLE follows (
   follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
   following_id UUID REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   PRIMARY KEY (follower_id, following_id)
 );
 
@@ -272,7 +268,7 @@ CREATE TABLE likes (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   media_id UUID REFERENCES media(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   PRIMARY KEY (user_id, media_id)
 );
 
@@ -282,14 +278,14 @@ CREATE TABLE comments (
   media_id UUID REFERENCES media(id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
-  
+
   content TEXT NOT NULL,
   is_edited BOOLEAN DEFAULT FALSE,
-  
+
   -- Moderation
   is_hidden BOOLEAN DEFAULT FALSE,
   hidden_reason TEXT,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -302,16 +298,16 @@ CREATE TABLE comments (
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  
+
   -- Notification details
   type VARCHAR(50) NOT NULL,
   title VARCHAR(255) NOT NULL,
   message TEXT,
   data JSONB DEFAULT '{}',
-  
+
   -- Status
   is_read BOOLEAN DEFAULT FALSE,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   read_at TIMESTAMPTZ
 );
@@ -362,6 +358,10 @@ CREATE INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for);
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
 
+-- Follows indexes
+CREATE INDEX idx_follows_follower ON follows(follower_id);
+CREATE INDEX idx_follows_following ON follows(following_id);
+
 -- ====================
 -- FUNCTIONS & TRIGGERS
 -- ====================
@@ -388,6 +388,166 @@ CREATE OR REPLACE FUNCTION update_user_media_counts()
 RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    UPDATE users 
-    SET 
-      image_count = image_count + CASE WHEN NEW.media_type
+    UPDATE users
+    SET
+      image_count = image_count + CASE WHEN NEW.media_type = 'image' THEN 1 ELSE 0 END,
+      video_count = video_count + CASE WHEN NEW.media_type = 'video' THEN 1 ELSE 0 END,
+      audio_count = audio_count + CASE WHEN NEW.media_type = 'audio' THEN 1 ELSE 0 END
+    WHERE id = NEW.user_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE users
+    SET
+      image_count = image_count - CASE WHEN OLD.media_type = 'image' THEN 1 ELSE 0 END,
+      video_count = video_count - CASE WHEN OLD.media_type = 'video' THEN 1 ELSE 0 END,
+      audio_count = audio_count - CASE WHEN OLD.media_type = 'audio' THEN 1 ELSE 0 END
+    WHERE id = OLD.user_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_media_counts AFTER INSERT OR DELETE ON media FOR EACH ROW EXECUTE FUNCTION update_user_media_counts();
+
+-- Update follower counts
+CREATE OR REPLACE FUNCTION update_follower_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE users SET follower_count = follower_count + 1 WHERE id = NEW.following_id;
+    UPDATE users SET following_count = following_count + 1 WHERE id = NEW.follower_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE users SET follower_count = follower_count - 1 WHERE id = OLD.following_id;
+    UPDATE users SET following_count = following_count - 1 WHERE id = OLD.follower_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_follow_counts AFTER INSERT OR DELETE ON follows FOR EACH ROW EXECUTE FUNCTION update_follower_counts();
+
+-- Update media stats (likes, comments, tips)
+CREATE OR REPLACE FUNCTION update_media_stats()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_TABLE_NAME = 'likes' THEN
+    IF TG_OP = 'INSERT' THEN
+      UPDATE media SET like_count = like_count + 1 WHERE id = NEW.media_id;
+    ELSIF TG_OP = 'DELETE' THEN
+      UPDATE media SET like_count = like_count - 1 WHERE id = OLD.media_id;
+    END IF;
+  ELSIF TG_TABLE_NAME = 'comments' THEN
+    IF TG_OP = 'INSERT' THEN
+      UPDATE media SET comment_count = comment_count + 1 WHERE id = NEW.media_id;
+    ELSIF TG_OP = 'DELETE' THEN
+      UPDATE media SET comment_count = comment_count - 1 WHERE id = OLD.media_id;
+    END IF;
+  ELSIF TG_TABLE_NAME = 'tips' AND TG_OP = 'INSERT' AND NEW.status = 'completed' THEN
+    UPDATE media
+    SET
+      tip_count = tip_count + 1,
+      tip_amount = tip_amount + NEW.amount
+    WHERE id = NEW.media_id;
+
+    UPDATE users
+    SET
+      total_earnings = total_earnings + NEW.creator_amount,
+      wallet_balance = wallet_balance + NEW.creator_amount
+    WHERE id = NEW.to_user_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_like_stats AFTER INSERT OR DELETE ON likes FOR EACH ROW EXECUTE FUNCTION update_media_stats();
+CREATE TRIGGER update_comment_stats AFTER INSERT OR DELETE ON comments FOR EACH ROW EXECUTE FUNCTION update_media_stats();
+CREATE TRIGGER update_tip_stats AFTER INSERT ON tips FOR EACH ROW EXECUTE FUNCTION update_media_stats();
+
+-- Search function for media
+CREATE OR REPLACE FUNCTION search_media(
+  search_query TEXT DEFAULT NULL,
+  media_type_filter TEXT DEFAULT NULL,
+  user_id_filter UUID DEFAULT NULL,
+  exclusive_filter BOOLEAN DEFAULT NULL,
+  limit_count INTEGER DEFAULT 50,
+  offset_count INTEGER DEFAULT 0
+)
+RETURNS TABLE (
+  id UUID,
+  user_id UUID,
+  title VARCHAR,
+  description TEXT,
+  media_type VARCHAR,
+  status VARCHAR,
+  published_at TIMESTAMPTZ,
+  view_count INTEGER,
+  like_count INTEGER,
+  comment_count INTEGER,
+  search_rank REAL
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    m.id,
+    m.user_id,
+    m.title,
+    m.description,
+    m.media_type,
+    m.status,
+    m.published_at,
+    m.view_count,
+    m.like_count,
+    m.comment_count,
+    ts_rank(m.search_vector, websearch_to_tsquery('english', search_query)) AS search_rank
+  FROM media m
+  WHERE
+    m.status = 'published'
+    AND (search_query IS NULL OR m.search_vector @@ websearch_to_tsquery('english', search_query))
+    AND (media_type_filter IS NULL OR m.media_type = media_type_filter)
+    AND (user_id_filter IS NULL OR m.user_id = user_id_filter)
+    AND (exclusive_filter IS NULL OR m.is_exclusive = exclusive_filter)
+  ORDER BY
+    CASE WHEN search_query IS NOT NULL THEN search_rank ELSE 0 END DESC,
+    m.published_at DESC
+  LIMIT limit_count
+  OFFSET offset_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get creator stats
+CREATE OR REPLACE FUNCTION get_creator_stats(creator_id UUID)
+RETURNS TABLE (
+  total_media INTEGER,
+  total_likes INTEGER,
+  total_comments INTEGER,
+  total_tips DECIMAL(10,2),
+  total_followers INTEGER,
+  total_earnings DECIMAL(10,2),
+  avg_rating DECIMAL(3,2)
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    COUNT(m.id)::INTEGER AS total_media,
+    COALESCE(SUM(m.like_count), 0)::INTEGER AS total_likes,
+    COALESCE(SUM(m.comment_count), 0)::INTEGER AS total_comments,
+    COALESCE(SUM(m.tip_amount), 0.00) AS total_tips,
+    u.follower_count AS total_followers,
+    u.total_earnings,
+    COALESCE(AVG(b.rating), 0.00) AS avg_rating
+  FROM users u
+  LEFT JOIN media m ON m.user_id = u.id AND m.status = 'published'
+  LEFT JOIN bookings b ON b.creator_id = u.id AND b.status = 'completed' AND b.rating IS NOT NULL
+  WHERE u.id = creator_id
+  GROUP BY u.id, u.follower_count, u.total_earnings;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ====================
+-- FINAL MESSAGE
+-- ====================
+
+-- Database schema deployed successfully!
+-- Next: Run data seeding and API development
+-- All future migrations will be automated via GitHub Actions
+
+SELECT '✅ FanCake Staging Database Schema Deployed Successfully!' AS message;
