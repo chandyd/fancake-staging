@@ -123,9 +123,9 @@ CREATE TABLE media (
 
   -- Full-text search
   search_vector TSVECTOR GENERATED ALWAYS AS (
-    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
-    setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
-    setweight(to_tsvector('english', array_to_string(tags, ' ')), 'C')
+    setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('simple', coalesce(description, '')), 'B') ||
+    setweight(to_tsvector('simple', array_to_string(tags, ' ')), 'C')
   ) STORED
 );
 
@@ -498,11 +498,11 @@ BEGIN
     m.view_count,
     m.like_count,
     m.comment_count,
-    ts_rank(m.search_vector, websearch_to_tsquery('english', search_query)) AS search_rank
+    ts_rank(m.search_vector, to_tsquery('simple', replace(search_query, ' ', ' & '))) AS search_rank
   FROM media m
   WHERE
     m.status = 'published'
-    AND (search_query IS NULL OR m.search_vector @@ websearch_to_tsquery('english', search_query))
+    AND (search_query IS NULL OR m.search_vector @@ to_tsquery('simple', replace(search_query, ' ', ' & ')))
     AND (media_type_filter IS NULL OR m.media_type = media_type_filter)
     AND (user_id_filter IS NULL OR m.user_id = user_id_filter)
     AND (exclusive_filter IS NULL OR m.is_exclusive = exclusive_filter)
