@@ -1,10 +1,10 @@
--- Wrapper immutable per to_tsvector(047simple047, text)
+-- Wrapper immutable per to_tsvector('simple', text)
 CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
 RETURNS tsvector
 LANGUAGE sql
 IMMUTABLE
 AS $$
-  SELECT to_tsvector(047simple047, $1);
+  SELECT to_tsvector('simple', $1);
 $$;
 
 -- Auto-deployed via GitHub Actions on 2026-04-21
