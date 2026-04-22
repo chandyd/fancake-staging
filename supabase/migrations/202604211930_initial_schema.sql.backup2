@@ -167,8 +167,12 @@ CREATE TABLE media (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
-  -- Full-text search (will be populated by trigger)
-  search_vector TSVECTOR
+  -- Full-text search
+  search_vector TSVECTOR GENERATED ALWAYS AS (
+    setweight(to_tsvector_simple( coalesce(title, '')), 'A') ||
+    setweight(to_tsvector_simple( coalesce(description, '')), 'B') ||
+    setweight(to_tsvector_simple( array_to_string_space(tags)), 'C')
+  ) STORED
 );
 
 CREATE OR REPLACE FUNCTION to_tsvector_simple(text)

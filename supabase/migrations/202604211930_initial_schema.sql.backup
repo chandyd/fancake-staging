@@ -1,21 +1,3 @@
--- Wrapper immutable per to_tsvector('simple', text)
-CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
-RETURNS tsvector
-LANGUAGE sql
-IMMUTABLE
-AS $$
-  SELECT to_tsvector('simple', $1);
-$$;
-
--- Wrapper immutable per array_to_string con delimitatore fisso
-CREATE OR REPLACE FUNCTION array_to_string_space(text[])
-RETURNS text
-LANGUAGE sql
-IMMUTABLE
-AS $$
-  SELECT array_to_string($1, ' ');
-$$;
-
 -- Auto-deployed via GitHub Actions on 2026-04-21
 -- Migration 001: Initial Schema for FanCake Staging
 -- Created: 2026-04-21
@@ -167,8 +149,12 @@ CREATE TABLE media (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
 
-  -- Full-text search (will be populated by trigger)
-  search_vector TSVECTOR
+  -- Full-text search
+  search_vector TSVECTOR GENERATED ALWAYS AS (
+    setweight(to_tsvector_simple( coalesce(title, '')), 'A') ||
+    setweight(to_tsvector_simple( coalesce(description, '')), 'B') ||
+    setweight(to_tsvector_simple( array_to_string(tags, ' ')), 'C')
+  ) STORED
 );
 
 CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
@@ -455,8 +441,7 @@ CREATE INDEX idx_notifications_unread ON notifications(user_id) WHERE NOT is_rea
 CREATE INDEX idx_bookings_creator ON bookings(creator_id, scheduled_for);
 CREATE INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for);
 CREATE INDEX idx_bookings_status ON bookings(status);
--- Note: Cannot use NOW() in index predicate (not IMMUTABLE)
--- CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
+CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
 
 -- Follows indexes
 CREATE INDEX idx_follows_follower ON follows(follower_id);
