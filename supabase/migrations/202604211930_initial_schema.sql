@@ -7,6 +7,15 @@ AS $$
   SELECT to_tsvector('simple', $1);
 $$;
 
+-- Wrapper immutable per array_to_string con delimitatore fisso
+CREATE OR REPLACE FUNCTION array_to_string_space(text[])
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT array_to_string($1, ' ');
+$$;
+
 -- Auto-deployed via GitHub Actions on 2026-04-21
 -- Migration 001: Initial Schema for FanCake Staging
 -- Created: 2026-04-21
@@ -162,7 +171,7 @@ CREATE TABLE media (
   search_vector TSVECTOR GENERATED ALWAYS AS (
     setweight(to_tsvector_simple( coalesce(title, '')), 'A') ||
     setweight(to_tsvector_simple( coalesce(description, '')), 'B') ||
-    setweight(to_tsvector_simple( array_to_string(tags, ' ')), 'C')
+    setweight(to_tsvector_simple( array_to_string_space(tags)), 'C')
   ) STORED
 );
 
