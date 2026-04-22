@@ -1,3 +1,12 @@
+-- Wrapper immutable per to_tsvector(047simple047, text)
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector(047simple047, $1);
+$$;
+
 -- Auto-deployed via GitHub Actions on 2026-04-21
 -- Migration 001: Initial Schema for FanCake Staging
 -- Created: 2026-04-21
@@ -11,8 +20,22 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- CORE TABLES (Laravel + Custom)
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Users table (extends Laravel's default users)
@@ -73,8 +96,22 @@ CREATE TABLE users (
   CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 );
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- MEDIA CONTENT TABLES
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Media table (REAL: images, videos, audio, live streams)
@@ -123,14 +160,28 @@ CREATE TABLE media (
 
   -- Full-text search
   search_vector TSVECTOR GENERATED ALWAYS AS (
-    setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
-    setweight(to_tsvector('simple', coalesce(description, '')), 'B') ||
-    setweight(to_tsvector('simple', array_to_string(tags, ' ')), 'C')
+    setweight(to_tsvector_simple( coalesce(title, '')), 'A') ||
+    setweight(to_tsvector_simple( coalesce(description, '')), 'B') ||
+    setweight(to_tsvector_simple( array_to_string(tags, ' ')), 'C')
   ) STORED
 );
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- MONETIZATION TABLES
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Tips table (REAL: fans can tip creators)
@@ -250,8 +301,22 @@ CREATE TABLE bookings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- SOCIAL INTERACTION TABLES
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Follows table
@@ -290,8 +355,22 @@ CREATE TABLE comments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- NOTIFICATIONS & ACTIVITY
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Notifications table
@@ -312,8 +391,22 @@ CREATE TABLE notifications (
   read_at TIMESTAMPTZ
 );
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- PERFORMANCE INDEXES
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Users indexes
@@ -363,8 +456,22 @@ CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('
 CREATE INDEX idx_follows_follower ON follows(follower_id);
 CREATE INDEX idx_follows_following ON follows(following_id);
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- FUNCTIONS & TRIGGERS
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Update updated_at timestamp
@@ -543,8 +650,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 -- FINAL MESSAGE
+CREATE OR REPLACE FUNCTION to_tsvector_simple(text)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT to_tsvector_simple( $1);
+$$;
 -- ====================
 
 -- Database schema deployed successfully!
