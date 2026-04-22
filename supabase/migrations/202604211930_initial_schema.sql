@@ -459,7 +459,8 @@ CREATE INDEX idx_notifications_unread ON notifications(user_id) WHERE NOT is_rea
 CREATE INDEX idx_bookings_creator ON bookings(creator_id, scheduled_for);
 CREATE INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for);
 CREATE INDEX idx_bookings_status ON bookings(status);
-CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
+-- Note: Cannot use NOW() in index predicate (not IMMUTABLE)
+-- CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
 
 -- Follows indexes
 CREATE INDEX idx_follows_follower ON follows(follower_id);
