@@ -1,0 +1,16 @@
+{
+  "name": "fancake-staging-frontend",
+  "version": "1.0.0",
+  "description": "FanCake Staging Frontend",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}

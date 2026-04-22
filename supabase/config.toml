@@ -1,13 +1,20 @@
-[project]
-id = "lftlvycvgauzrryyqxpu"
+[global]
+project_id = "lftlvycvgauzrryyqxpu"
 
 [auth]
 site_url = "https://fancake-staging.vercel.app"
-additional_redirect_urls = []
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://fancake-staging.netlify.app"
+]
+
+enable_signup = true
+enable_email_signin = true
+enable_email_confirmations = true
 
 [api]
-schemas = ["public", "storage"]
-extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
 [storage]
-file_size_limit = 52428800
+file_size_limit = 52428800  # 50MB

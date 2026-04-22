@@ -1,0 +1,397 @@
+-- Auto-deployed via GitHub Actions on 2026-04-21
+-- Migration 001: Initial Schema for FanCake Staging
+-- Created: 2026-04-21
+-- Strategy: Option B (Incremental migrations)
+-- Priority: Performance > Maintainability > Costs
+-- BASED ON EXTREME ANALYSIS OF REAL FANCAKE DROPLET:
+-- Laravel 7.7+, Cloudflare, Stripe integration, Creator-first platform
+-- Media types: images, videos, audio, live streams
+-- Monetization: tips, subscriptions, exclusive content, private calls
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ====================
+-- CORE TABLES (Laravel + Custom)
+-- ====================
+
+-- Users table (extends Laravel's default users)
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Laravel authentication fields
+  email VARCHAR(255) UNIQUE NOT NULL,
+  email_verified_at TIMESTAMPTZ,
+  password VARCHAR(255) NOT NULL,
+  remember_token VARCHAR(100),
+  
+  -- Profile fields
+  username VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100),
+  
+  -- Creator status (REAL: verified badge, featured badge)
+  is_creator BOOLEAN DEFAULT FALSE,
+  is_verified BOOLEAN DEFAULT FALSE,
+  is_featured BOOLEAN DEFAULT FALSE,
+  
+  -- Assets (REAL: /assets/avatar/{size}/{filename})
+  avatar_filename TEXT DEFAULT 'default-avatar.png',
+  cover_filename TEXT,
+  
+  -- Bio and links
+  bio TEXT,
+  website TEXT,
+  social_links JSONB DEFAULT '{}',
+  
+  -- Stats (REAL: follower counts, media counts)
+  follower_count INTEGER DEFAULT 0,
+  following_count INTEGER DEFAULT 0,
+  image_count INTEGER DEFAULT 0,
+  video_count INTEGER DEFAULT 0,
+  audio_count INTEGER DEFAULT 0,
+  
+  -- Monetization (REAL: Stripe integration)
+  stripe_customer_id TEXT,
+  stripe_account_id TEXT, -- For creator payouts
+  wallet_balance DECIMAL(10,2) DEFAULT 0.00,
+  total_earnings DECIMAL(10,2) DEFAULT 0.00,
+  
+  -- Settings
+  settings JSONB DEFAULT '{
+    "notifications": true,
+    "privacy": "public",
+    "language": "en"
+  }',
+  
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  last_seen_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Performance indexes
+  CONSTRAINT valid_username CHECK (username ~ '^[a-zA-Z0-9_]{3,50}$'),
+  CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+);
+
+-- ====================
+-- MEDIA CONTENT TABLES
+-- ====================
+
+-- Media table (REAL: images, videos, audio, live streams)
+CREATE TABLE media (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Content metadata
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  tags TEXT[] DEFAULT '{}',
+  
+  -- Media type (REAL: images, videos, audio, live_stream)
+  media_type VARCHAR(20) NOT NULL CHECK (media_type IN ('image', 'video', 'audio', 'live_stream')),
+  
+  -- File info (REAL: assets/{type}/{size}/{filename})
+  filename TEXT NOT NULL,
+  file_size INTEGER,
+  mime_type VARCHAR(100),
+  duration INTEGER, -- seconds for video/audio
+  thumbnail_filename TEXT,
+  
+  -- Monetization (REAL: exclusive content, tips, memberships)
+  is_exclusive BOOLEAN DEFAULT FALSE,
+  access_type VARCHAR(20) DEFAULT 'free' CHECK (access_type IN ('free', 'tip', 'subscription', 'membership')),
+  price DECIMAL(10,2),
+  currency VARCHAR(3) DEFAULT 'EUR',
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'private', 'archived')),
+  is_pinned BOOLEAN DEFAULT FALSE,
+  
+  -- Stats
+  view_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  comment_count INTEGER DEFAULT 0,
+  tip_count INTEGER DEFAULT 0,
+  tip_amount DECIMAL(10,2) DEFAULT 0.00,
+  share_count INTEGER DEFAULT 0,
+  
+  -- Timestamps
+  published_at TIMESTAMPTZ,
+  scheduled_for TIMESTAMPTZ, -- For scheduled posts/live streams
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Full-text search
+  search_vector TSVECTOR GENERATED ALWAYS AS (
+    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(description, '')), 'B') ||
+    setweight(to_tsvector('english', array_to_string(tags, ' ')), 'C')
+  ) STORED
+);
+
+-- ====================
+-- MONETIZATION TABLES
+-- ====================
+
+-- Tips table (REAL: fans can tip creators)
+CREATE TABLE tips (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  from_user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  to_user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  media_id UUID REFERENCES media(id) ON DELETE SET NULL,
+  
+  -- Tip info
+  amount DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) DEFAULT 'EUR',
+  message TEXT,
+  is_anonymous BOOLEAN DEFAULT FALSE,
+  
+  -- Stripe payment
+  stripe_payment_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT,
+  stripe_fee DECIMAL(10,2),
+  platform_fee DECIMAL(10,2),
+  creator_amount DECIMAL(10,2),
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,
+  
+  -- Indexes
+  INDEX idx_tips_to_user ON tips(to_user_id),
+  INDEX idx_tips_status ON tips(status)
+);
+
+-- Subscription plans (REAL: different membership tiers)
+CREATE TABLE subscription_plans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  creator_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Plan details
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  monthly_amount DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) DEFAULT 'EUR',
+  
+  -- Features
+  features JSONB DEFAULT '[]',
+  is_active BOOLEAN DEFAULT TRUE,
+  position INTEGER DEFAULT 0,
+  
+  -- Stripe
+  stripe_price_id TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  UNIQUE(creator_id, name)
+);
+
+-- Active subscriptions (REAL: monthly memberships)
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  plan_id UUID REFERENCES subscription_plans(id) ON DELETE CASCADE NOT NULL,
+  subscriber_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Stripe subscription
+  stripe_subscription_id TEXT UNIQUE,
+  stripe_customer_id TEXT,
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due', 'unpaid', 'incomplete')),
+  
+  -- Dates
+  start_date TIMESTAMPTZ DEFAULT NOW(),
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  canceled_at TIMESTAMPTZ,
+  trial_end TIMESTAMPTZ,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- One active subscription per plan per user
+  UNIQUE(plan_id, subscriber_id) WHERE status = 'active'
+);
+
+-- Bookings for private calls (REAL: video/audio calls)
+CREATE TABLE bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  creator_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  fan_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Booking type (REAL: video call, audio call, live stream)
+  booking_type VARCHAR(20) NOT NULL CHECK (booking_type IN ('video_call', 'audio_call', 'live_stream')),
+  
+  -- Scheduling
+  scheduled_for TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  timezone VARCHAR(50) DEFAULT 'UTC',
+  
+  -- Pricing
+  amount DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(3) DEFAULT 'EUR',
+  
+  -- Status
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'canceled', 'no_show')),
+  
+  -- Stripe payment
+  stripe_payment_id TEXT,
+  
+  -- Meeting info
+  meeting_url TEXT,
+  meeting_id TEXT,
+  meeting_password TEXT,
+  meeting_notes TEXT,
+  
+  -- Ratings
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  review TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Indexes
+  INDEX idx_bookings_creator ON bookings(creator_id, scheduled_for),
+  INDEX idx_bookings_fan ON bookings(fan_id, scheduled_for)
+);
+
+-- ====================
+-- SOCIAL INTERACTION TABLES
+-- ====================
+
+-- Follows table
+CREATE TABLE follows (
+  follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  following_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  PRIMARY KEY (follower_id, following_id),
+  
+  -- Indexes
+  INDEX idx_follows_follower ON follows(follower_id),
+  INDEX idx_follows_following ON follows(following_id)
+);
+
+-- Likes table
+CREATE TABLE likes (
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  media_id UUID REFERENCES media(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  PRIMARY KEY (user_id, media_id),
+  
+  -- Indexes
+  INDEX idx_likes_media ON likes(media_id)
+);
+
+-- Comments table
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  media_id UUID REFERENCES media(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  
+  content TEXT NOT NULL,
+  is_edited BOOLEAN DEFAULT FALSE,
+  
+  -- Moderation
+  is_hidden BOOLEAN DEFAULT FALSE,
+  hidden_reason TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Indexes
+  INDEX idx_comments_media ON comments(media_id),
+  INDEX idx_comments_user ON comments(user_id),
+  INDEX idx_comments_parent ON comments(parent_id)
+);
+
+-- ====================
+-- NOTIFICATIONS & ACTIVITY
+-- ====================
+
+-- Notifications table
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Notification details
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  message TEXT,
+  data JSONB DEFAULT '{}',
+  
+  -- Status
+  is_read BOOLEAN DEFAULT FALSE,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  read_at TIMESTAMPTZ,
+  
+  -- Indexes
+  INDEX idx_notifications_user ON notifications(user_id, created_at DESC),
+  INDEX idx_notifications_unread ON notifications(user_id) WHERE NOT is_read
+);
+
+-- ====================
+-- PERFORMANCE INDEXES
+-- ====================
+
+-- Users indexes
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_creator ON users(is_creator) WHERE is_creator = TRUE;
+CREATE INDEX idx_users_verified ON users(is_verified) WHERE is_verified = TRUE;
+CREATE INDEX idx_users_featured ON users(is_featured) WHERE is_featured = TRUE;
+
+-- Media indexes
+CREATE INDEX idx_media_user ON media(user_id);
+CREATE INDEX idx_media_type ON media(media_type);
+CREATE INDEX idx_media_status ON media(status) WHERE status = 'published';
+CREATE INDEX idx_media_published ON media(published_at DESC) WHERE status = 'published';
+CREATE INDEX idx_media_exclusive ON media(is_exclusive) WHERE is_exclusive = TRUE;
+CREATE INDEX idx_media_search ON media USING GIN(search_vector);
+
+-- Tips indexes
+CREATE INDEX idx_tips_created ON tips(created_at DESC);
+
+-- Subscriptions indexes
+CREATE INDEX idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX idx_subscriptions_period ON subscriptions(current_period_end) WHERE status = 'active';
+
+-- Bookings indexes  
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_bookings_upcoming ON bookings(scheduled_for) WHERE status IN ('pending', 'confirmed') AND scheduled_for > NOW();
+
+-- ====================
+-- FUNCTIONS & TRIGGERS
+-- ====================
+
+-- Update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply triggers to all tables
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_media_updated_at BEFORE UPDATE ON media FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_subscription_plans_updated_at BEFORE UPDATE ON subscription_plans FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_comments_updated_at BEFORE UPDATE ON comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Update user stats when media is added/deleted
+CREATE OR REPLACE FUNCTION update_user_media_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE users 
+    SET 
+      image_count = image_count + CASE WHEN NEW.media_type
