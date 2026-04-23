@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Test</title>
+    <meta name="supabase-url" content="https://lftlvycvgauzrryyqxpu.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s">
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="result">Testing...</div>
+    
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = document.querySelector('meta[name="supabase-url"]').getAttribute('content');
+        const SUPABASE_ANON_KEY = document.querySelector('meta[name="supabase-anon-key"]').getAttribute('content');
+        
+        console.log('URL:', SUPABASE_URL);
+        console.log('Key (first 10):', SUPABASE_ANON_KEY.substring(0, 10) + '...');
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function testConnection() {
+            try {
+                const result = document.getElementById('result');
+                result.innerHTML = 'Connecting to Supabase...';
+                
+                // Test 1: Simple query
+                const { data, error } = await supabase
+                    .from('media')
+                    .select('id, title')
+                    .limit(1);
+                
+                if (error) {
+                    result.innerHTML = `❌ Error: ${error.message}<br>Code: ${error.code}`;
+                    console.error('Supabase error:', error);
+                    return;
+                }
+                
+                result.innerHTML = `✅ Success! Found ${data.length} media items.<br>`;
+                if (data.length > 0) {
+                    result.innerHTML += `First item: ${data[0].title || 'No title'} (ID: ${data[0].id})`;
+                }
+                
+                console.log('Test data:', data);
+            } catch (err) {
+                document.getElementById('result').innerHTML = `❌ Exception: ${err.message}`;
+                console.error('Exception:', err);
+            }
+        }
+        
+        testConnection();
+    </script>
+</body>
+</html>

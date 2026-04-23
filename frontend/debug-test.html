@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+    <meta name="supabase-url" content="https://lftlvycvgauzrryyqxpu.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s">
+</head>
+<body>
+    <h1>Debug Test Page</h1>
+    <div id="output">Testing...</div>
+    
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const output = document.getElementById('output');
+        
+        async function runTests() {
+            const tests = [];
+            
+            // Test 1: Check if Supabase SDK loaded
+            tests.push({
+                name: 'Supabase SDK',
+                test: () => !!window.supabase,
+                message: '✅ Supabase SDK loaded',
+                error: '❌ Supabase SDK not loaded'
+            });
+            
+            // Test 2: Read environment variables
+            const metaUrl = document.querySelector('meta[name="supabase-url"]');
+            const metaKey = document.querySelector('meta[name="supabase-anon-key"]');
+            tests.push({
+                name: 'Environment Variables',
+                test: () => metaUrl && metaKey,
+                message: '✅ Environment variables found',
+                error: '❌ Environment variables missing'
+            });
+            
+            // Test 3: Create Supabase client
+            let supabaseClient = null;
+            if (metaUrl && metaKey) {
+                try {
+                    supabaseClient = window.supabase.createClient(
+                        metaUrl.getAttribute('content'),
+                        metaKey.getAttribute('content')
+                    );
+                    tests.push({
+                        name: 'Supabase Client',
+                        test: () => !!supabaseClient,
+                        message: '✅ Supabase client created',
+                        error: '❌ Failed to create Supabase client'
+                    });
+                } catch (err) {
+                    tests.push({
+                        name: 'Supabase Client',
+                        test: () => false,
+                        message: '',
+                        error: `❌ Error creating client: ${err.message}`
+                    });
+                }
+            }
+            
+            // Test 4: Test connection
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('media')
+                        .select('count', { count: 'exact', head: true });
+                    
+                    tests.push({
+                        name: 'Supabase Connection',
+                        test: () => !error,
+                        message: `✅ Connected to Supabase (${data.count || 0} media items)`,
+                        error: `❌ Connection failed: ${error?.message || 'Unknown error'}`
+                    });
+                } catch (err) {
+                    tests.push({
+                        name: 'Supabase Connection',
+                        test: () => false,
+                        message: '',
+                        error: `❌ Connection exception: ${err.message}`
+                    });
+                }
+            }
+            
+            // Display results
+            let html = '<h2>Test Results</h2><ul>';
+            tests.forEach(test => {
+                const passed = test.test();
+                html += `<li><strong>${test.name}:</strong> ${passed ? test.message : test.error}</li>`;
+            });
+            html += '</ul>';
+            
+            output.innerHTML = html;
+            
+            // Also log to console
+            console.log('Debug tests completed:', tests);
+        }
+        
+        runTests();
+    </script>
+</body>
+</html>
