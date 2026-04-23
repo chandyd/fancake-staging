@@ -293,7 +293,7 @@
                 mimeType = file.type;
             } else if (fileUrl) {
                 filename = fileUrl.split('/').pop();
-                mimeType = (mediaType === 'video' ? 'video/mp4' : mediaType === 'image' ? 'image/jpeg' : mediaType === 'audio' ? 'audio/mpeg' : 'application/octet-stream');
+                mimeType = (mediaType === 'video' ? 'video/mp4' : 'image/jpeg');
                 fileSize = 0;
             }
 
