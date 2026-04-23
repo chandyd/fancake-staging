@@ -81,7 +81,7 @@
         var name = creator.display_name || creator.username;
         var bio = creator.bio || 'No bio yet';
         var followers = creator.follower_count || 0;
-        var verified = creator.verified ? '<span class="badge bg-success ms-1"><i class="bi bi-check-circle"></i></span>' : '';
+        var verified = creator.is_verified ? '<span class="badge bg-success ms-1"><i class="bi bi-check-circle"></i></span>' : '';
         return '<div class="col-md-6 col-lg-4 mb-3">' +
             '<div class="card creator-card h-100"><div class="card-body">' +
             '<h5 class="card-title">' + name + verified + '</h5>' +
@@ -125,7 +125,7 @@
             console.log('[FanCake] Fetching creators...');
             var result = await supabase
                 .from('users')
-                .select('id, username, display_name, verified, featured, bio, follower_count')
+                .select('id, username, display_name, is_verified, is_featured, bio, follower_count')
                 .eq('is_creator', true)
                 .order('follower_count', { ascending: false })
                 .limit(5);
@@ -170,8 +170,83 @@
         }
     };
 
-    window.login = function() { alert('Login coming soon!'); };
-    window.signup = function() { alert('Signup coming soon!'); };
+    // ---- Login / Signup con Supabase Auth ----
+    function showAuthModal(mode) {
+        var existing = document.getElementById('authModal');
+        if (existing) existing.remove();
+        var isLogin = mode === 'login';
+        var modal = document.createElement('div');
+        modal.id = 'authModal';
+        modal.className = 'modal fade show d-block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content">' +
+            '<div class="modal-header"><h5 class="modal-title">' + (isLogin ? 'Login' : 'Sign Up') + '</h5>' +
+            '<button type="button" class="btn-close" onclick="closeAuthModal()"></button></div>' +
+            '<div class="modal-body">' +
+            '<div id="authAlert"></div>' +
+            '<div class="mb-3"><label class="form-label">Email</label>' +
+            '<input type="email" id="authEmail" class="form-control" placeholder="your@email.com"></div>' +
+            '<div class="mb-3"><label class="form-label">Password</label>' +
+            '<input type="password" id="authPassword" class="form-control" placeholder="••••••••"></div>' +
+            (isLogin ? '' : '<div class="mb-3"><label class="form-label">Username</label>' +
+            '<input type="text" id="authUsername" class="form-control" placeholder="coolcreator"></div>') +
+            '<button class="btn btn-primary w-100" onclick="' + (isLogin ? 'doLogin()' : 'doSignup()') + '">' +
+            (isLogin ? 'Login' : 'Create Account') + '</button></div></div></div>';
+        document.body.appendChild(modal);
+    }
+
+    window.closeAuthModal = function() {
+        var el = document.getElementById('authModal');
+        if (el) el.remove();
+    };
+
+    window.doLogin = async function() {
+        var email = document.getElementById('authEmail').value.trim();
+        var password = document.getElementById('authPassword').value;
+        if (!email || !password) { setAuthAlert('Fill in all fields', 'warning'); return; }
+        setAuthAlert('Logging in...', 'info');
+        try {
+            var result = await supabase.auth.signInWithPassword({ email: email, password: password });
+            if (result.error) throw result.error;
+            setAuthAlert('Login successful! Redirecting...', 'success');
+            setTimeout(function() { window.location.reload(); }, 1000);
+        } catch (e) {
+            setAuthAlert(e.message, 'danger');
+        }
+    };
+
+    window.doSignup = async function() {
+        var email = document.getElementById('authEmail').value.trim();
+        var password = document.getElementById('authPassword').value;
+        var username = document.getElementById('authUsername') ? document.getElementById('authUsername').value.trim() : '';
+        if (!email || !password || !username) { setAuthAlert('Fill in all fields', 'warning'); return; }
+        setAuthAlert('Creating account...', 'info');
+        try {
+            var result = await supabase.auth.signUp({ email: email, password: password });
+            if (result.error) throw result.error;
+            // Create user profile in users table
+            if (result.data.user) {
+                await supabase.from('users').insert([{
+                    id: result.data.user.id,
+                    email: email,
+                    username: username,
+                    display_name: username,
+                    is_creator: true
+                }]);
+            }
+            setAuthAlert('Account created! Check your email to confirm, then login.', 'success');
+        } catch (e) {
+            setAuthAlert(e.message, 'danger');
+        }
+    };
+
+    function setAuthAlert(msg, type) {
+        var el = document.getElementById('authAlert');
+        if (el) el.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible">' + msg + '</div>';
+    }
+
+    window.login = function() { showAuthModal('login'); };
+    window.signup = function() { showAuthModal('signup'); };
 
     // ---- Main ----
     function main() {
