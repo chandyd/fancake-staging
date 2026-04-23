@@ -239,7 +239,7 @@ async function publish() {
       if (selFile.type.startsWith('image/')) data.media_thumb = data.media_url;
     }
 
-    const res = await _sb.from('drops').insert([data]).select('*, users!inner(id,username,email,avatar_url)').single();
+    const res = await _sb.from('drops').insert([data]).select('*, users!inner(id,username,email)').single();
     if (res.error) throw res.error;
 
     // Save AI tag suggestions
@@ -271,7 +271,7 @@ async function loadStream() {
 
   try {
     let q = _sb.from('drops')
-      .select('*, users!inner(id,username,email,avatar_url)')
+      .select('*, users!inner(id,username,email)')
       .eq('status','active')
       .order('dropped_at', {ascending:false})
       .limit(50);
@@ -380,7 +380,7 @@ window.Drip = {
     m.classList.add('open');
     b.innerHTML = '<div class="loading-pulse"><div class="sk-chase"><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div></div></div>';
     try {
-      const r = await _sb.from('drops').select('*, users!inner(id,username,email,avatar_url)').eq('id',id).single();
+      const r = await _sb.from('drops').select('*, users!inner(id,username,email)').eq('id',id).single();
       if (r.error) throw r.error;
       const d = r.data, u = d.users||{}, uname = u.username||u.email||'anon';
       const info = TYPES[d.drop_type]||TYPES.moment;
