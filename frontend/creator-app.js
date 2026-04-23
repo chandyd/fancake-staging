@@ -415,7 +415,16 @@
         });
 
         supabase.auth.onAuthStateChange(function(event, session) {
-            if (event === 'SIGNED_IN') window.location.reload();
+            if (event === 'SIGNED_IN') {
+                // No reload: just refresh the dashboard in-place
+                var modal = document.getElementById('authModal');
+                if (modal) modal.remove();
+                checkAuth();
+            }
+            if (event === 'SIGNED_OUT') {
+                document.getElementById('notAuthCard').style.display = '';
+                document.getElementById('dashContent').style.display = 'none';
+            }
         });
     }
 

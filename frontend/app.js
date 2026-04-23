@@ -208,8 +208,12 @@
         try {
             var result = await supabase.auth.signInWithPassword({ email: email, password: password });
             if (result.error) throw result.error;
-            setAuthAlert('Login successful! Redirecting...', 'success');
-            setTimeout(function() { window.location.reload(); }, 1000);
+            setAuthAlert('Login successful!', 'success');
+            setTimeout(function() {
+                var m = document.getElementById('authModal');
+                if (m) m.remove();
+                updateNavbar(result.data.user);
+            }, 500);
         } catch (e) {
             setAuthAlert(e.message, 'danger');
         }
@@ -249,7 +253,9 @@
     window.signup = function() { showAuthModal('signup'); };
 
     window.logout = function() {
-        supabase.auth.signOut().then(function() { window.location.reload(); });
+        supabase.auth.signOut().then(function() {
+            updateNavbar(null);
+        });
     };
 
     // ---- Session / Navbar update ----
