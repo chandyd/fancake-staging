@@ -2,554 +2,248 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Drip — Drop it. Live.</title>
-<meta name="supabase-url" content="https://lftlvycvgauzrryyqxpu.supabase.co">
-<meta name="supabase-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Drip</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
-:root {
-  --bg-dark: #0a0a0f;
-  --bg-card: #13131a;
-  --bg-card-hover: #1a1a24;
-  --border-subtle: #1e1e2a;
-  --text-primary: #e8e8f0;
-  --text-secondary: #8888a0;
-  --accent-drip: #6c5ce7;
-  --accent-snap: #f59e0b;
-  --accent-cap: #ef4444;
-  --accent-page: #3b82f6;
-  --accent-portal: #10b981;
-  --accent-echo: #8b5cf6;
-  --accent-box: #6b7280;
-  --accent-moment: #ec4899;
-  --radius: 16px;
-  --radius-sm: 10px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b10; --bg2:#12121a; --bg3:#1a1a25;
+  --text-primary:#e8e8f0; --text-secondary:#7777aa;
+  --accent:#7c5cfc; --accent-dim:#5a3fc8;
+  --border-subtle:#22223a; --radius:12px;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-primary);
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh}
+.cont{max-width:680px;margin:0 auto;padding:16px}
 
-/* NAV */
-.navbar {
-  background: rgba(10,10,15,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 10px 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.brand-drip {
-  font-size: 1.4rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.5px;
-}
-.brand-drip span { font-weight: 300; color: var(--text-secondary); -webkit-text-fill-color: var(--text-secondary); }
-.nav-btn {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.nav-btn:hover { background: var(--bg-card); border-color: var(--accent-drip); }
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:4px}
+.hdr h1{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.hdr h1 span{background:linear-gradient(135deg,#7c5cfc,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.user-badge{font-size:0.8rem;color:var(--text-secondary);padding:4px 10px;background:var(--bg3);border-radius:20px;white-space:nowrap}
+.btn-outline{background:transparent;border:1px solid var(--border-subtle);color:var(--text-secondary);padding:6px 14px;border-radius:20px;font-size:0.8rem;cursor:pointer;transition:.15s}
+.btn-outline:hover{border-color:var(--accent);color:var(--text-primary)}
+#dropCount{font-size:0.75rem;color:var(--text-secondary);padding:2px 8px;background:var(--bg3);border-radius:10px}
 
-/* DROP ZONE (il cuore pulsante) */
-.drop-zone-wrapper { padding: 16px 0 0; margin-bottom: 14px; }
-.drop-inner {
-  position: relative;
-  background: var(--bg-card);
-  border: 2px dashed var(--border-subtle);
-  border-radius: var(--radius);
-  padding: 28px 24px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-  text-align: center;
-  overflow: hidden;
-}
-.drop-inner::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, transparent 40%, rgba(108,92,231,0.08) 100%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.drop-inner:hover::before, .drop-inner.active::before, .drop-inner.dragover::before { opacity: 1; }
-.drop-inner:hover { border-color: rgba(108,92,231,0.4); }
-.drop-inner.active { border-color: var(--accent-drip); }
-.drop-inner.dragover {
-  border-color: var(--accent-drip);
-  transform: scale(1.015);
-  background: rgba(108,92,231,0.08);
-}
-.drop-icon-big { font-size: 2.8rem; display: block; margin-bottom: 6px; transition: transform 0.3s; }
-.drop-inner.dragover .drop-icon-big { transform: translateY(-6px) scale(1.15); }
-.drop-text-main { color: var(--text-secondary); font-size: 0.95rem; }
-.drop-text-main strong { color: var(--text-primary); }
-.drop-hint { font-size: 0.78rem; color: var(--text-secondary); opacity: 0.5; margin-top: 2px; }
-.drop-input { display: none; }
+/* Filters + View toggle */
+.ft-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+#filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
+.filter-btn{background:transparent;border:1px solid transparent;color:var(--text-secondary);padding:4px 12px;border-radius:16px;font-size:0.78rem;cursor:pointer;transition:.15s}
+.filter-btn.on{background:var(--bg3);border-color:var(--border-subtle);color:var(--text-primary)}
+.filter-btn:hover{border-color:var(--border-subtle)}
+.ft-spacer{flex:1}
+.vw-btn{background:transparent;border:1px solid var(--border-subtle);color:var(--text-secondary);padding:4px 12px;border-radius:16px;font-size:0.78rem;cursor:pointer;transition:.15s}
+.vw-btn.on{background:var(--accent-dim);border-color:var(--accent);color:#fff}
+.vw-btn:hover{border-color:var(--accent);color:var(--text-primary)}
 
-/* EXPANDED FORM */
-.drop-form { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
-.drop-form.open { display: block; }
-.drop-form input, .drop-form textarea {
-  background: #181820;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  padding: 10px 14px;
-  width: 100%;
-  font-size: 0.9rem;
-  transition: border-color 0.2s;
-}
-.drop-form input:focus, .drop-form textarea:focus {
-  outline: none;
-  border-color: var(--accent-drip);
-  box-shadow: 0 0 0 3px rgba(108,92,231,0.12);
-}
-.drop-form textarea { resize: vertical; min-height: 70px; }
-.preview-box {
-  display: none;
-  background: #181820;
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  margin-top: 6px;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-.preview-box.open { display: flex; }
-.preview-box img, .preview-box video { max-height: 80px; border-radius: 6px; }
+/* Drop zone */
+.drop-zone{border:2px dashed var(--border-subtle);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:.2s;margin:8px 0 12px}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:var(--bg2)}
+.drop-zone-icon{font-size:2rem;margin-bottom:6px}
+.drop-zone-text{color:var(--text-secondary);font-size:0.85rem}
+.drop-zone-hint{color:var(--text-secondary);font-size:0.72rem;margin-top:4px;opacity:.6}
+#dropFile{display:none}
 
-/* Tag arena */
-.tag-arena {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-  padding: 6px 8px;
-  background: #181820;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  min-height: 38px;
-}
-.tag-arena input {
-  flex: 1;
-  min-width: 60px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  padding: 4px;
-  font-size: 0.85rem;
-}
-.tag-arena input:focus { outline: none; }
-.tag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: rgba(108,92,231,0.12);
-  color: var(--accent-drip);
-  padding: 3px 10px;
-  border-radius: 16px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-.tag-pill:hover, .tag-pill.on { background: rgba(108,92,231,0.22); border-color: var(--accent-drip); }
-.tag-pill.suggest::after { content: ' ✨'; font-size: 0.65rem; }
-.tag-pill .x { opacity: 0.5; cursor: pointer; margin-left: 2px; font-size: 0.8rem; }
-.tag-pill .x:hover { opacity: 1; }
-.ai-suggestions { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 3px; }
+/* Drop form */
+.drop-form{display:none;background:var(--bg2);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:16px;margin:8px 0 12px}
+.drop-form.open{display:block}
+.df-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.df-head .badge{font-size:0.72rem;padding:3px 10px;border-radius:12px;background:var(--bg3);color:var(--text-secondary)}
+.df-head .badge.on{background:var(--accent-dim);color:#fff}
+.df-row{margin-bottom:8px}
+.df-row input,.df-row textarea{width:100%;background:var(--bg3);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;font-size:0.9rem;color:var(--text-primary);outline:none;transition:.15s}
+.df-row input:focus,.df-row textarea:focus{border-color:var(--accent)}
+.df-row textarea{min-height:80px;resize:vertical;font-family:inherit}
+.df-preview{display:none;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:8px}
+.df-preview.open{display:flex;align-items:center;gap:10px}
+.df-preview img{max-height:60px;border-radius:6px}
+.df-preview span{font-size:0.78rem;color:var(--text-secondary)}
+
+/* Tags */
+.tag-arena{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
+.tag-arena input{background:transparent;border:none;color:var(--text-primary);font-size:0.82rem;padding:4px 0;outline:none;width:80px}
+.tag-pill{font-size:0.72rem;padding:3px 10px;border-radius:12px;background:var(--bg3);color:var(--text-secondary);cursor:pointer;border:1px solid transparent;transition:.15s}
+.tag-pill.on{background:var(--accent-dim);border-color:var(--accent);color:#fff}
+.tag-pill.suggest{background:transparent;border:1px dashed var(--border-subtle);color:var(--text-secondary)}
+.tag-pill.suggest.on{border-style:solid}
+.tag-pill .x{margin-left:4px;opacity:.5;font-size:.8rem}
+.tag-pill .x:hover{opacity:1}
+.ai-hints{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px;min-height:20px}
 
 /* Drop button */
-.btn-drip {
-  background: linear-gradient(135deg, var(--accent-drip), #a29bfe);
-  border: none; color: white;
-  padding: 11px 32px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.95rem;
-  width: 100%;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-drip:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(108,92,231,0.3); }
-.btn-drip:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.btn-drip-secondary {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 6px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-drip-secondary:hover { border-color: var(--accent-drip); color: var(--text-primary); }
+.df-actions{display:flex;gap:8px;margin-top:10px}
+.btn-primary{flex:1;background:linear-gradient(135deg,var(--accent),#6d4aff);border:none;color:#fff;padding:12px;border-radius:10px;font-size:0.9rem;font-weight:500;cursor:pointer;transition:.15s}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.4;cursor:default}
+.btn-cancel{background:transparent;border:1px solid var(--border-subtle);color:var(--text-secondary);padding:12px 18px;border-radius:10px;cursor:pointer;font-size:0.85rem}
 
-/* STREAM HEADER */
-.stream-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.stream-header h5 {
-  font-weight: 600;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.live-dot {
-  width: 7px; height: 7px;
-  background: #ef4444;
-  border-radius: 50%;
-  display: inline-block;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
-.stream-count { color: var(--text-secondary); font-weight: 400; font-size: 0.85rem; margin-left: 4px; }
+/* Stream - card view */
+.stream{margin-top:4px}
+.drop-card{background:var(--bg2);border:1px solid var(--border-subtle);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;transition:.15s;overflow:hidden}
+.drop-card:hover{border-color:#33334a;transform:translateY(-1px)}
+.drop-card-pad{padding:14px}
+.dc-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dc-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:#fff;flex-shrink:0}
+.dc-user{flex:1;min-width:0}
+.dc-name{font-size:0.8rem;font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc-time{font-size:0.7rem;color:var(--text-secondary)}
+.dc-type{font-size:0.72rem;color:var(--text-secondary);white-space:nowrap}
+.dc-title{font-size:0.95rem;font-weight:500;margin-bottom:6px;line-height:1.4}
+.dc-desc{font-size:0.82rem;color:var(--text-secondary);line-height:1.6;margin-bottom:6px}
+.dc-media img,.dc-media video{width:100%;border-radius:8px;max-height:360px;object-fit:cover;margin-bottom:6px}
+.dc-link{border:1px solid var(--border-subtle);border-radius:8px;padding:10px;margin-bottom:6px;background:var(--bg3);cursor:pointer}
+.dc-link img{max-height:80px;width:100%;object-fit:cover;border-radius:6px;margin-bottom:6px}
+.dc-link-title{font-size:0.82rem;font-weight:500;margin-bottom:2px}
+.dc-link-desc{font-size:0.72rem;color:var(--text-secondary)}
+.dc-link-host{font-size:0.68rem;color:var(--accent);margin-top:4px}
+.dc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.dc-tag{font-size:0.68rem;padding:2px 8px;border-radius:8px;background:var(--bg3);color:var(--text-secondary)}
+.dc-actions{display:flex;gap:12px;padding-top:8px;border-top:1px solid var(--border-subtle)}
+.dc-act{background:none;border:none;color:var(--text-secondary);font-size:0.78rem;cursor:pointer;padding:2px 6px;border-radius:6px;transition:.15s}
+.dc-act:hover{background:var(--bg3);color:var(--text-primary)}
 
-/* FILTERS */
-.stream-filters {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.f-chip {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 5px 12px;
-  border-radius: 18px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.f-chip:hover { border-color: rgba(108,92,231,0.3); color: var(--text-primary); }
-.f-chip.on { background: rgba(108,92,231,0.12); border-color: var(--accent-drip); color: var(--accent-drip); }
+/* Empty state */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-secondary)}
+.empty-icon{font-size:2.5rem;display:block;margin-bottom:12px}
 
-/* DROP CARD */
-.drop-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border-subtle);
-  margin-bottom: 10px;
-  transition: all 0.2s;
-  cursor: pointer;
-  overflow: hidden;
-}
-.drop-card:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(108,92,231,0.15);
-}
-.drop-card-pad { padding: 14px; }
-.dc-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.dc-avatar {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-drip), #a29bfe);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.8rem;
-  color: white;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.dc-user { flex: 1; display: flex; flex-direction: column; }
-.dc-name { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); }
-.dc-time { font-size: 0.72rem; color: var(--text-secondary); }
-.dc-type {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 14px;
-  font-weight: 500;
-  background: rgba(255,255,255,0.04);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.dc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: var(--text-primary); }
-.dc-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px; }
-.dc-media {
-  max-height: 280px;
-  overflow: hidden;
-  background: #000;
-}
-.dc-media img, .dc-media video { width: 100%; max-height: 280px; object-fit: cover; display: block; }
-.dc-link {
-  background: #181820;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-}
-.dc-link:hover { border-color: rgba(108,92,231,0.2); }
-.dc-link img { width: 100%; max-height: 130px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
-.dc-link-title { font-weight: 600; font-size: 0.85rem; }
-.dc-link-desc { font-size: 0.78rem; color: var(--text-secondary); }
-.dc-link-host { font-size: 0.72rem; color: var(--accent-portal); margin-top: 3px; }
-.dc-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
-.dc-tag { font-size: 0.7rem; color: var(--accent-drip); background: rgba(108,92,231,0.08); padding: 2px 7px; border-radius: 10px; }
-.dc-actions {
-  display: flex;
-  gap: 16px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
-}
-.dc-act {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-.dc-act:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
-.dc-act.on-heart { color: #ef4444; }
+/* Loading spinner */
+.loading-pulse{display:flex;justify-content:center;padding:48px 0}
+.sk-chase{width:30px;height:30px;position:relative;animation:sk-chase 2.5s infinite linear both}
+.sk-chase-dot{width:100%;height:100%;position:absolute;left:0;top:0;animation:sk-chase-dot 2s infinite ease-in-out both}
+.sk-chase-dot:before{content:'';display:block;width:25%;height:25%;background:var(--accent);border-radius:100%;animation:sk-chase-dot-before 2s infinite ease-in-out both}
+.sk-chase-dot:nth-child(1){animation-delay:-1.1s}
+.sk-chase-dot:nth-child(2){animation-delay:-1s}
+.sk-chase-dot:nth-child(3){animation-delay:-.9s}
+.sk-chase-dot:nth-child(4){animation-delay:-.8s}
+.sk-chase-dot:nth-child(5){animation-delay:-.7s}
+.sk-chase-dot:nth-child(6){animation-delay:-.6s}
+.sk-chase-dot:nth-child(1):before{animation-delay:-1.1s}
+.sk-chase-dot:nth-child(2):before{animation-delay:-1s}
+.sk-chase-dot:nth-child(3):before{animation-delay:-.9s}
+.sk-chase-dot:nth-child(4):before{animation-delay:-.8s}
+.sk-chase-dot:nth-child(5):before{animation-delay:-.7s}
+.sk-chase-dot:nth-child(6):before{animation-delay:-.6s}
+@keyframes sk-chase{100%{transform:rotate(360deg)}}
+@keyframes sk-chase-dot{80%,100%{transform:rotate(360deg)}}
+@keyframes sk-chase-dot-before{50%{transform:scale(.4)}100%,0%{transform:scale(1)}}
 
-/* EMPTY */
-.empty-state { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
-.empty-icon { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+/* Modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border-subtle);border-radius:var(--radius);padding:20px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-close{float:right;background:none;border:none;color:var(--text-secondary);font-size:1.2rem;cursor:pointer}
+.modal-close:hover{color:var(--text-primary)}
+.modal-title{font-size:1.1rem;font-weight:500;margin-bottom:16px}
+.modal-body{color:var(--text-secondary);font-size:0.9rem;line-height:1.6}
+.mb-2{margin-bottom:8px}
 
-/* LOADING */
-.loading-pulse { text-align: center; padding: 30px; color: var(--text-secondary); }
-.sk-chase { display: inline-block; width: 24px; height: 24px; animation: sk-chase 2.5s infinite linear both; }
-.sk-chase-dot { width: 100%; height: 100%; position: absolute; left: 0; top: 0; animation: sk-chase-dot 2s infinite ease-in-out both; }
-.sk-chase-dot::before { content: ''; display: block; width: 25%; height: 25%; background-color: var(--accent-drip); border-radius: 100%; animation: sk-chase-dot-before 2s infinite ease-in-out both; }
-.sk-chase-dot:nth-child(1) { animation-delay: -1.1s; }
-.sk-chase-dot:nth-child(2) { animation-delay: -1.0s; }
-.sk-chase-dot:nth-child(3) { animation-delay: -0.9s; }
-.sk-chase-dot:nth-child(4) { animation-delay: -0.8s; }
-.sk-chase-dot:nth-child(5) { animation-delay: -0.7s; }
-.sk-chase-dot:nth-child(6) { animation-delay: -0.6s; }
-@keyframes sk-chase { 100% { transform: rotate(360deg); } }
-@keyframes sk-chase-dot { 80%,100% { transform: rotate(360deg); } }
-@keyframes sk-chase-dot-before { 50% { transform: scale(0.4); } 100%,0% { transform: scale(1); } }
+/* Auth form */
+.auth-row{margin-bottom:10px}
+.auth-row label{display:block;font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px}
+.auth-row input{width:100%;background:var(--bg3);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;font-size:0.9rem;color:var(--text-primary);outline:none}
+.auth-row input:focus{border-color:var(--accent)}
+.auth-err{color:#ef4444;font-size:0.78rem;margin-bottom:8px}
+.auth-toggle{background:none;border:none;color:var(--accent);font-size:0.78rem;cursor:pointer;margin-top:8px}
+.auth-toggle:hover{text-decoration:underline}
 
-/* MODAL */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+/* Responsive */
+@media(max-width:520px){
+  .cont{padding:12px}
+  .hdr h1{font-size:1.25rem}
 }
-.modal-overlay.open { display: flex; }
-.modal-box {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  max-width: 520px;
-  width: 100%;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 20px;
-  border: 1px solid var(--border-subtle);
-  position: relative;
-}
-.modal-close {
-  background: rgba(0,0,0,0.4);
-  border: none; color: white;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex; align-items: center; justify-content: center;
-}
-
-/* AUTH */
-.auth-box { max-width: 340px; margin: 0 auto; }
-.auth-box input {
-  background: #181820;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  padding: 10px 14px;
-  width: 100%;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-}
-.auth-box input:focus { outline: none; border-color: var(--accent-drip); }
-.auth-switch { color: var(--accent-drip); cursor: pointer; font-size: 0.85rem; }
-.auth-switch:hover { text-decoration: underline; }
-.auth-err { color: #ef4444; font-size: 0.82rem; margin-bottom: 6px; }
-
-/* RESPONSIVE */
-@media (max-width: 560px) {
-  .drop-inner { padding: 20px 16px; }
-  .drop-card-pad { padding: 12px; }
-  .modal-box { padding: 14px; }
-}
-
-/* TYPE BADGE COLORS */
-.type-snapshot { --t: var(--accent-snap); }
-.type-capsule { --t: var(--accent-cap); }
-.type-page { --t: var(--accent-page); }
-.type-portal { --t: var(--accent-portal); }
-.type-echo { --t: var(--accent-echo); }
-.type-box { --t: var(--accent-box); }
-.type-moment { --t: var(--accent-moment); }
-
-/* ANIMAZIONE ENTRATA */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.drop-card { animation: fadeUp 0.35s ease both; }
-.drop-card:nth-child(2) { animation-delay: 0.04s; }
-.drop-card:nth-child(3) { animation-delay: 0.08s; }
-.drop-card:nth-child(4) { animation-delay: 0.12s; }
-.drop-card:nth-child(5) { animation-delay: 0.16s; }
 </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
-<nav class="navbar">
-  <div class="container">
-    <div class="d-flex justify-content-between align-items-center w-100">
-      <a href=".." style="text-decoration:none;" class="d-flex align-items-center gap-2">
-        <span style="font-size:1.1rem;color:var(--text-secondary);">⌂</span>
-      </a>
-      <div class="brand-drip">drip<span>.staging</span></div>
-      <div class="d-flex gap-2 align-items-center" id="navAuth">
-        <button class="nav-btn" onclick="Drip.showAuth()" title="Account" id="authBtn"><i class="bi bi-person"></i></button>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<!-- MAIN -->
-<div class="container" style="max-width: 580px;">
-
-  <!-- DROP ZONE -->
-  <div class="drop-zone-wrapper">
-    <div class="drop-inner" id="dropZone">
-      <span class="drop-icon-big" id="dropBigIcon">📥</span>
-      <div class="drop-text-main" id="dropMainText">
-        <strong>Drop something</strong><br>
-        <span class="drop-hint">Click · drag · paste — everything works</span>
-      </div>
-      <input type="file" id="dropFile" class="drop-input" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.txt,.md">
-    </div>
-
-    <div class="drop-form" id="dropForm">
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <span class="f-chip on" id="typeBadge">🖼 Snapshot</span>
-        <button class="btn-drip-secondary" onclick="Drip.cancelDrop()" style="margin-left:auto;">Cancel</button>
-      </div>
-      <input type="text" id="dropTitle" placeholder="Title (optional)" class="mb-2">
-      <textarea id="dropDesc" placeholder="Say something about this drop..." rows="2" class="mb-2"></textarea>
-      <div class="preview-box" id="dropPreview"></div>
-      <div class="mb-2">
-        <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:3px;">Tags</label>
-        <div class="tag-arena" id="tagArena">
-          <input type="text" id="tagInput" placeholder="Type + Enter">
-        </div>
-        <div class="ai-suggestions" id="aiTags"></div>
-      </div>
-      <button class="btn-drip" id="dropBtn" onclick="Drip.publish()">✧ Drop into the stream</button>
+<div class="cont">
+  <!-- Header -->
+  <div class="hdr">
+    <h1><span>✦</span> Drip</h1>
+    <div class="hdr-actions">
+      <span id="dropCount">0</span>
+      <div id="authUI"></div>
     </div>
   </div>
 
-  <!-- STREAM HEADER -->
-  <div class="stream-header">
-    <h5><span class="live-dot"></span> The Stream <span class="stream-count" id="dropCount">0</span></h5>
-    <button class="nav-btn" onclick="Drip.reload()" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+  <!-- Filters + View Toggle -->
+  <div class="ft-row">
+    <div id="filters">
+      <button class="filter-btn on" data-f="all">All</button>
+      <button class="filter-btn" data-f="snapshot">🖼</button>
+      <button class="filter-btn" data-f="capsule">🎬</button>
+      <button class="filter-btn" data-f="page">📖</button>
+      <button class="filter-btn" data-f="portal">🔗</button>
+      <button class="filter-btn" data-f="echo">🎧</button>
+      <button class="filter-btn" data-f="moment">💬</button>
+    </div>
+    <div class="ft-spacer"></div>
+    <button class="vw-btn on" data-v="card">☰ Stream</button>
+    <button class="vw-btn" data-v="echo">✦ Echo</button>
   </div>
 
-  <!-- FILTERS -->
-  <div class="stream-filters" id="filters">
-    <button class="f-chip on" data-f="all" onclick="Drip.filter('all',this)">All</button>
-    <button class="f-chip" data-f="snapshot" onclick="Drip.filter('snapshot',this)">🖼</button>
-    <button class="f-chip" data-f="capsule" onclick="Drip.filter('capsule',this)">🎬</button>
-    <button class="f-chip" data-f="page" onclick="Drip.filter('page',this)">📖</button>
-    <button class="f-chip" data-f="portal" onclick="Drip.filter('portal',this)">🔗</button>
-    <button class="f-chip" data-f="echo" onclick="Drip.filter('echo',this)">🎧</button>
-    <button class="f-chip" data-f="moment" onclick="Drip.filter('moment',this)">💬</button>
-    <button class="f-chip" data-f="box" onclick="Drip.filter('box',this)">📦</button>
+  <!-- Drop zone -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-zone-icon">+</div>
+    <div class="drop-zone-text">Drop anything — text, image, video, link, audio</div>
+    <div class="drop-zone-hint">Drag, paste, or click to choose files</div>
+  </div>
+  <input type="file" id="dropFile">
+
+  <!-- Drop form -->
+  <div class="drop-form" id="dropForm">
+    <div class="df-head">
+      <span class="badge on" id="typeBadge">💬 Moment</span>
+      <span style="font-size:0.72rem;color:var(--text-secondary);flex:1">Fill details &amp; drop</span>
+    </div>
+    <div class="df-preview" id="dropPreview"></div>
+    <div class="df-row"><input type="text" id="dropTitle" placeholder="Title (optional)" oninput="updateAITags()"></div>
+    <div class="df-row"><textarea id="dropDesc" placeholder="Write something…" oninput="updateAITags()"></textarea></div>
+    <div class="ai-hints" id="aiTags"></div>
+    <div class="tag-arena" id="tagArena"><input type="text" id="tagInput" placeholder="+ add tag"></div>
+    <div class="df-actions">
+      <button class="btn-primary" id="dropBtn" onclick="Drip.publish()">✧ Drop into the stream</button>
+      <button class="btn-cancel" onclick="Drip.cancelDrop()">Cancel</button>
+    </div>
   </div>
 
-  <!-- STREAM CONTAINER -->
-  <div id="stream"></div>
+  <!-- Stream -->
+  <div class="stream" id="stream">
+    <div class="loading-pulse"><div class="sk-chase"><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div></div></div>
+  </div>
 </div>
 
-<!-- AUTH MODAL -->
-<div class="modal-overlay" id="authModal">
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="event.target===this&&Drip.closeDetail()">
   <div class="modal-box">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h5 style="margin:0;" id="authTitle">Sign in</h5>
-      <button class="modal-close" onclick="Drip.closeAuth()"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="auth-box">
-      <div class="auth-err" id="authErr"></div>
-      <input type="email" id="authEmail" placeholder="Email">
-      <input type="password" id="authPass" placeholder="Password">
-      <input type="text" id="authName" placeholder="Username" style="display:none;">
-      <button class="btn-drip" onclick="Drip.submitAuth()" id="authBtn2">Sign in</button>
-      <div class="text-center mt-2">
-        <span class="auth-switch" id="authToggle" onclick="Drip.toggleAuth()">No account? Create one</span>
-      </div>
-    </div>
+    <button class="modal-close" onclick="Drip.closeDetail()">✕</button>
+    <div class="modal-body" id="detailBody"></div>
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
-<div class="modal-overlay" id="detailModal">
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authModal" onclick="event.target===this&&(this.classList.remove('open'))">
   <div class="modal-box">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h5 style="margin:0;">Drop</h5>
-      <button class="modal-close" onclick="Drip.closeDetail()"><i class="bi bi-x-lg"></i></button>
+    <button class="modal-close" onclick="document.getElementById('authModal').classList.remove('open')">✕</button>
+    <div class="modal-title" id="authTitle">Sign in</div>
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-row" id="authName" style="display:none">
+      <label>Name</label>
+      <input type="text" id="authNameInput" placeholder="Your display name">
     </div>
-    <div id="detailBody"></div>
+    <div class="auth-row">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com">
+    </div>
+    <div class="auth-row">
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" id="authBtn2" onclick="Drip.authSubmit()" style="width:100%;margin-top:4px">Sign in</button>
+    <div style="text-align:center"><button class="auth-toggle" id="authToggle" onclick="Drip.toggleAuth()">No account? Create one</button></div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="drip.js"></script>
 </body>
 </html>
