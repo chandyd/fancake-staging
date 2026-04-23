@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FanCake Staging</title>
-    <!-- Environment variables for Vercel -->
     <meta name="supabase-url" content="https://lftlvycvgauzrryyqxpu.supabase.co">
     <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,57 +13,95 @@
         .creator-card:hover { transform: translateY(-5px); }
         .media-card { border-radius: 12px; overflow: hidden; }
         .search-box { max-width: 500px; margin: 0 auto; }
+        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4rem 0; margin-bottom: 2rem; border-radius: 0 0 2rem 2rem; }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .trending-card { border-left: 4px solid #ffc107; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="/">
                 <i class="bi bi-cake"></i> FanCake <span class="badge bg-warning">Staging</span>
             </a>
             <div class="d-flex align-items-center">
+                <a href="/reads.html" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-book"></i> Reads</a>
                 <a href="/creator.html" class="btn btn-outline-warning btn-sm me-2" id="navCreatorLink" style="display:none;"><i class="bi bi-pencil-square"></i> Creator</a>
+                <a href="/admin.html" class="btn btn-outline-info btn-sm me-2" id="navAdminLink" style="display:none;">Admin</a>
                 <button class="btn btn-outline-light me-2" onclick="login()">Login</button>
                 <button class="btn btn-primary" onclick="signup()">Sign Up</button>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div class="text-center mb-5">
-            <h1 class="display-4">Welcome to FanCake Staging</h1>
-            <p class="lead">Creator monetization platform - Test Environment</p>
-            
-            <div class="search-box input-group mb-4">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search creators and content...">
-                <button class="btn btn-primary" onclick="search()">
-                    <i class="bi bi-search"></i> Search
-                </button>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-3 fw-bold mb-3">Welcome to FanCake</h1>
+            <p class="lead mb-4">The ultimate creator monetization platform. Share your stories, videos, and art with the world. Build your audience, earn from your creativity, and connect with fans like never before.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="/reads.html" class="btn btn-light btn-lg"><i class="bi bi-book"></i> Explore Reads</a>
+                <a href="/creator.html" class="btn btn-outline-light btn-lg"><i class="bi bi-pencil-square"></i> Start Creating</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Features -->
+        <div class="row text-center mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon text-primary"><i class="bi bi-book"></i></div>
+                <h4>FanCake Reads</h4>
+                <p class="text-muted">Publish novels, short stories, and serialized fiction. Monetize with premium chapters and subscriptions.</p>
+                <a href="/reads.html" class="btn btn-outline-primary">Go to Reads</a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon text-success"><i class="bi bi-camera-video"></i></div>
+                <h4>Media & Content</h4>
+                <p class="text-muted">Share photos, videos, and audio content. Set exclusive access and earn from tips and subscriptions.</p>
+                <a href="/creator.html" class="btn btn-outline-success">Creator Studio</a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon text-warning"><i class="bi bi-people"></i></div>
+                <h4>Community</h4>
+                <p class="text-muted">Follow your favorite creators, leave reviews, bookmark content, and join the conversation.</p>
             </div>
         </div>
 
         <div class="row">
+            <!-- Featured Media -->
             <div class="col-md-8">
-                <h3><i class="bi bi-play-circle"></i> Featured Media</h3>
+                <h3><i class="bi bi-play-circle"></i> Recent Media</h3>
                 <div id="mediaContainer" class="row">
-                    <!-- Media will be loaded here -->
                     <div class="col-12 text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Trending / Top Creators -->
             <div class="col-md-4">
-                <h3><i class="bi bi-star"></i> Top Creators</h3>
+                <h3><i class="bi bi-fire"></i> Trending</h3>
+                <div id="trendingContainer">
+                    <div class="text-center"><div class="spinner-border text-success" role="status"></div></div>
+                </div>
+
+                <h3 class="mt-4"><i class="bi bi-star"></i> Top Creators</h3>
                 <div id="creatorsContainer">
-                    <!-- Creators will be loaded here -->
-                    <div class="text-center">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+                    <div class="text-center"><div class="spinner-border text-success" role="status"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reads Preview -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3><i class="bi bi-book"></i> Latest Reads</h3>
+                    <a href="/reads.html" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div id="readsContainer" class="row">
+                    <div class="col-12 text-center"><div class="spinner-border text-primary"></div></div>
                 </div>
             </div>
         </div>
@@ -72,8 +109,13 @@
 
     <footer class="bg-dark text-white mt-5 py-4">
         <div class="container text-center">
-            <p>FanCake Staging • Database: lftlvycvgauzrryyqxpu • API: Operational</p>
-            <small>This is a staging environment for testing purposes</small>
+            <p class="mb-1">FanCake Staging &bull; Creator Monetization Platform</p>
+            <small class="text-muted">Database: lftlvycvgauzrryyqxpu &bull; API: Operational</small>
+            <div class="mt-2">
+                <a href="/reads.html" class="text-light text-decoration-none me-3">Reads</a>
+                <a href="/creator.html" class="text-light text-decoration-none me-3">Creator</a>
+                <a href="/admin.html" class="text-light text-decoration-none">Admin</a>
+            </div>
         </div>
     </footer>
 

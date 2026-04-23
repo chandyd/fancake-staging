@@ -1,38 +1,15 @@
-// FanCake Staging Frontend - v2.0 (Robust)
+// FanCake Home App - v2.0
 (function() {
     'use strict';
-    console.log('[FanCake] Loading...');
+    console.log('[FanCake Home] Loading...');
 
-    let SUPABASE_URL = '';
-    let SUPABASE_ANON_KEY = '';
-    let supabase = null;
+    var SUPABASE_URL = 'https://lftlvycvgauzrryyqxpu.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s';
+    var supabase = null;
 
-    // ---- Bootstrap: get env vars ----
-    function loadEnv() {
-        const metaUrl = document.querySelector('meta[name="supabase-url"]');
-        const metaKey = document.querySelector('meta[name="supabase-anon-key"]');
-        if (metaUrl && metaKey) {
-            SUPABASE_URL = metaUrl.getAttribute('content');
-            SUPABASE_ANON_KEY = metaKey.getAttribute('content');
-            console.log('[FanCake] Env loaded from meta tags');
-            return true;
-        }
-        // Fallback: window globals
-        if (window.VITE_SUPABASE_URL && window.VITE_SUPABASE_ANON_KEY) {
-            SUPABASE_URL = window.VITE_SUPABASE_URL;
-            SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY;
-            console.log('[FanCake] Env loaded from window globals');
-            return true;
-        }
-        console.error('[FanCake] No Supabase credentials found');
-        return false;
-    }
-
-    // ---- Init Supabase ----
     function initSupabase() {
         if (typeof window.supabase === 'undefined') {
             console.error('[FanCake] Supabase SDK not loaded');
-            showError('Supabase SDK failed to load. Refresh the page or try again later.');
             return false;
         }
         try {
@@ -41,14 +18,12 @@
             return true;
         } catch (e) {
             console.error('[FanCake] Failed to create Supabase client:', e);
-            showError('Failed to initialize database connection: ' + e.message);
             return false;
         }
     }
 
-    // ---- UI Helpers ----
     function showError(msg) {
-        const el = document.createElement('div');
+        var el = document.createElement('div');
         el.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg';
         el.style.zIndex = '9999';
         el.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + msg;
@@ -91,21 +66,33 @@
             '<span class="badge bg-primary">Creator</span></div></div></div></div>';
     }
 
+    function createBookCard(book) {
+        var title = book.title || 'Untitled';
+        var genre = book.genre || 'General';
+        var rating = book.rating ? book.rating.toFixed(1) : 'N/A';
+        var words = book.word_count ? Math.floor(book.word_count / 1000) + 'k' : '0';
+        var cover = book.cover_filename || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=450&fit=crop';
+        return '<div class="col-md-4 col-lg-3 mb-4">' +
+            '<div class="card h-100">' +
+            '<img src="' + cover + '" class="card-img-top" style="height:180px;object-fit:cover;" alt="' + title + '">' +
+            '<div class="card-body">' +
+            '<h6 class="card-title">' + title + '</h6>' +
+            '<span class="badge bg-primary">' + genre + '</span> ' +
+            '<small class="text-muted">' + words + ' words</small><br>' +
+            '<small><i class="bi bi-star-fill text-warning"></i> ' + rating + '</small>' +
+            '</div>' +
+            '<div class="card-footer bg-transparent border-top-0">' +
+            '<a href="/reads.html" class="btn btn-outline-primary btn-sm w-100">Read</a></div></div></div>';
+    }
+
     // ---- Data Loading ----
     async function loadMedia(container) {
         if (!container) return;
         setLoading(container, 'Loading media...');
         try {
-            console.log('[FanCake] Fetching media...');
-            var result = await supabase
-                .from('media')
-                .select('id, title, description, media_type, filename, view_count, like_count, published_at')
-                .eq('status', 'published')
-                .order('published_at', { ascending: false })
-                .limit(6);
+            var result = await supabase.from('media').select('id, title, description, media_type, filename, view_count, like_count, published_at').eq('status', 'published').order('published_at', { ascending: false }).limit(6);
             if (result.error) throw result.error;
             var data = result.data;
-            console.log('[FanCake] Media loaded:', data.length, 'items');
             container.innerHTML = '';
             if (data.length === 0) {
                 container.innerHTML = '<div class="col-12"><div class="alert alert-info"><i class="bi bi-info-circle"></i> No media yet. Be the first creator!</div></div>';
@@ -113,7 +100,6 @@
             }
             data.forEach(function(m) { container.innerHTML += createMediaCard(m); });
         } catch (e) {
-            console.error('[FanCake] Media error:', e);
             container.innerHTML = '<div class="col-12"><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error loading media: ' + e.message + '</div></div>';
         }
     }
@@ -122,16 +108,9 @@
         if (!container) return;
         setLoading(container, 'Loading creators...');
         try {
-            console.log('[FanCake] Fetching creators...');
-            var result = await supabase
-                .from('users')
-                .select('id, username, display_name, is_verified, is_featured, bio, follower_count')
-                .eq('is_creator', true)
-                .order('follower_count', { ascending: false })
-                .limit(5);
+            var result = await supabase.from('users').select('id, username, display_name, is_verified, is_featured, bio, follower_count').eq('is_creator', true).order('follower_count', { ascending: false }).limit(5);
             if (result.error) throw result.error;
             var data = result.data;
-            console.log('[FanCake] Creators loaded:', data.length, 'creators');
             container.innerHTML = '';
             if (data.length === 0) {
                 container.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> No creators yet.</div>';
@@ -139,8 +118,48 @@
             }
             data.forEach(function(c) { container.innerHTML += createCreatorCard(c); });
         } catch (e) {
-            console.error('[FanCake] Creators error:', e);
-            container.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error loading creators: ' + e.message + '</div>';
+            container.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error loading creators: ' + e.message + '</div></div>';
+        }
+    }
+
+    async function loadTrending(container) {
+        if (!container) return;
+        try {
+            var result = await supabase.from('media').select('id, title, like_count, view_count').eq('status', 'published').order('like_count', { ascending: false }).limit(5);
+            if (result.error) throw result.error;
+            var data = result.data;
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-muted">No trending content yet.</p>';
+                return;
+            }
+            var html = '<div class="list-group">';
+            data.forEach(function(m, i) {
+                html += '<div class="list-group-item d-flex justify-content-between align-items-center trending-card">' +
+                    '<div><span class="badge bg-warning me-2">#' + (i + 1) + '</span><strong>' + m.title + '</strong></div>' +
+                    '<span class="badge bg-danger"><i class="bi bi-heart"></i> ' + (m.like_count || 0) + '</span></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<div class="alert alert-danger">Error: ' + e.message + '</div>';
+        }
+    }
+
+    async function loadReadsPreview(container) {
+        if (!container) return;
+        try {
+            var result = await supabase.from('reads_books').select('*').eq('status', 'published').order('published_at', { ascending: false }).limit(4);
+            if (result.error) throw result.error;
+            var data = result.data;
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info">No books yet. <a href="/reads.html">Be the first to publish!</a></div></div>';
+                return;
+            }
+            data.forEach(function(b) { container.innerHTML += createBookCard(b); });
+        } catch (e) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-danger">Error: ' + e.message + '</div></div>';
         }
     }
 
@@ -165,12 +184,11 @@
             var title = document.querySelector('h3');
             if (title) title.innerHTML = '<i class="bi bi-search"></i> Results for "' + query + '"';
         } catch (e) {
-            console.error('[FanCake] Search error:', e);
             container.innerHTML = '<div class="col-12"><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Search error: ' + e.message + '</div></div>';
         }
     };
 
-    // ---- Login / Signup con Supabase Auth ----
+    // ---- Login / Signup ----
     function showAuthModal(mode) {
         var existing = document.getElementById('authModal');
         if (existing) existing.remove();
@@ -209,11 +227,7 @@
             var result = await supabase.auth.signInWithPassword({ email: email, password: password });
             if (result.error) throw result.error;
             setAuthAlert('Login successful!', 'success');
-            setTimeout(function() {
-                var m = document.getElementById('authModal');
-                if (m) m.remove();
-                updateNavbar(result.data.user);
-            }, 500);
+            setTimeout(function() { var m = document.getElementById('authModal'); if (m) m.remove(); updateNavbar(result.data.user); }, 500);
         } catch (e) {
             setAuthAlert(e.message, 'danger');
         }
@@ -228,7 +242,6 @@
         try {
             var result = await supabase.auth.signUp({ email: email, password: password });
             if (result.error) throw result.error;
-            // Create user profile in users table
             if (result.data.user) {
                 await supabase.from('users').insert([{
                     id: result.data.user.id,
@@ -253,9 +266,7 @@
     window.signup = function() { showAuthModal('signup'); };
 
     window.logout = function() {
-        supabase.auth.signOut().then(function() {
-            updateNavbar(null);
-        });
+        supabase.auth.signOut().then(function() { updateNavbar(null); });
     };
 
     // ---- Session / Navbar update ----
@@ -263,43 +274,41 @@
         var navBtns = document.querySelector('.navbar .d-flex');
         if (!navBtns) return;
         var creatorLink = document.getElementById('navCreatorLink');
+        var adminLink = document.getElementById('navAdminLink');
         if (user) {
-            navBtns.innerHTML = '<span class="text-light me-2"><i class="bi bi-person-circle"></i> ' + (user.user_metadata?.username || user.email) + '</span>' +
+            navBtns.innerHTML = '<span class="text-light me-2"><i class="bi bi-person-circle"></i> ' + (user.user_metadata && user.user_metadata.username ? user.user_metadata.username : user.email) + '</span>' +
                 '<button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>';
             if (creatorLink) creatorLink.style.display = '';
+            if (adminLink) adminLink.style.display = '';
         } else {
             navBtns.innerHTML = '<button class="btn btn-outline-light me-2" onclick="login()">Login</button>' +
                 '<button class="btn btn-primary" onclick="signup()">Sign Up</button>';
             if (creatorLink) creatorLink.style.display = 'none';
+            if (adminLink) adminLink.style.display = 'none';
         }
     }
 
     // ---- Main ----
     function main() {
-        if (!loadEnv()) {
+        if (!initSupabase()) {
             showError('Configuration error: Missing Supabase credentials');
             return;
         }
-        if (!initSupabase()) return;
 
-        // Check existing session
         supabase.auth.getSession().then(function(resp) {
             updateNavbar(resp.data.session ? resp.data.session.user : null);
         });
 
-        // Listen for auth changes (login/logout in other tabs)
         supabase.auth.onAuthStateChange(function(event, session) {
             updateNavbar(session ? session.user : null);
         });
 
-        var mediaContainer = document.getElementById('mediaContainer');
-        var creatorsContainer = document.getElementById('creatorsContainer');
-
-        loadMedia(mediaContainer);
-        loadCreators(creatorsContainer);
+        loadMedia(document.getElementById('mediaContainer'));
+        loadCreators(document.getElementById('creatorsContainer'));
+        loadTrending(document.getElementById('trendingContainer'));
+        loadReadsPreview(document.getElementById('readsContainer'));
     }
 
-    // Wait for DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', main);
     } else {

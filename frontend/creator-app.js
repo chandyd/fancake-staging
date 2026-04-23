@@ -1,32 +1,14 @@
-// FanCake Creator Dashboard - v1.0
+// FanCake Creator Dashboard - v2.0
 (function() {
     'use strict';
     console.log('[FanCake Creator] Loading...');
 
-    let SUPABASE_URL = '';
-    let SUPABASE_ANON_KEY = '';
-    let supabase = null;
-    let currentUser = null;
-    let currentProfile = null;
-    let mediaCache = [];
-
-    // ---- Bootstrap ----
-    function loadEnv() {
-        const metaUrl = document.querySelector('meta[name="supabase-url"]');
-        const metaKey = document.querySelector('meta[name="supabase-anon-key"]');
-        if (metaUrl && metaKey) {
-            SUPABASE_URL = metaUrl.getAttribute('content');
-            SUPABASE_ANON_KEY = metaKey.getAttribute('content');
-            return true;
-        }
-        if (window.VITE_SUPABASE_URL && window.VITE_SUPABASE_ANON_KEY) {
-            SUPABASE_URL = window.VITE_SUPABASE_URL;
-            SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY;
-            return true;
-        }
-        console.error('[FanCake Creator] No Supabase credentials');
-        return false;
-    }
+    var SUPABASE_URL = 'https://lftlvycvgauzrryyqxpu.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s';
+    var supabase = null;
+    var currentUser = null;
+    var currentProfile = null;
+    var mediaCache = [];
 
     function initSupabase() {
         if (typeof window.supabase === 'undefined') {
@@ -59,7 +41,7 @@
         setTimeout(function() { el.innerHTML = ''; }, 6000);
     }
 
-    // ---- Auth Modal (inline, same pattern as app.js) ----
+    // ---- Auth Modal ----
     function showAuthModal(mode) {
         var existing = document.getElementById('authModal');
         if (existing) existing.remove();
@@ -137,7 +119,6 @@
             });
             if (result.error) throw result.error;
             if (result.data.user) {
-                // Create profile in users table
                 await supabase.from('users').insert([{
                     id: result.data.user.id,
                     email: email,
@@ -154,25 +135,61 @@
         }
     };
 
+    // ---- Follow System ----
+    window.toggleFollow = async function(creatorId) {
+        if (!currentUser) { showAuthModal('login'); return; }
+        var btn = document.getElementById('followBtn-' + creatorId);
+        if (!btn) return;
+        try {
+            if (btn.dataset.following === 'true') {
+                await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', creatorId);
+                btn.dataset.following = 'false';
+                btn.textContent = 'Follow';
+                btn.className = 'btn btn-primary';
+                updateFollowerCount(creatorId, -1);
+            } else {
+                await supabase.from('follows').insert([{ follower_id: currentUser.id, following_id: creatorId }]);
+                btn.dataset.following = 'true';
+                btn.textContent = 'Unfollow';
+                btn.className = 'btn btn-outline-secondary';
+                updateFollowerCount(creatorId, 1);
+            }
+        } catch (e) {
+            showError('Follow error: ' + e.message);
+        }
+    };
+
+    function updateFollowerCount(creatorId, delta) {
+        var el = document.getElementById('followerCount-' + creatorId);
+        if (el) {
+            var current = parseInt(el.textContent) || 0;
+            el.textContent = Math.max(0, current + delta);
+        }
+    }
+
+    async function checkFollowStatus(creatorId) {
+        if (!currentUser) return false;
+        try {
+            var res = await supabase.from('follows').select('*').eq('follower_id', currentUser.id).eq('following_id', creatorId).limit(1);
+            return res.data && res.data.length > 0;
+        } catch (e) { return false; }
+    }
+
     // ---- Dashboard Functions ----
 
     async function loadStats() {
         if (!currentUser) return;
         try {
-            // Count user's media
-            var { data: myMedia, error: mediaErr } = await supabase
-                .from('media')
-                .select('id, view_count, like_count')
-                .eq('user_id', currentUser.id);
-            if (mediaErr) throw mediaErr;
+            var myMedia = await supabase.from('media').select('id, view_count, like_count').eq('user_id', currentUser.id);
+            if (myMedia.error) throw myMedia.error;
 
             var totalViews = 0, totalLikes = 0;
-            myMedia.forEach(function(m) {
+            myMedia.data.forEach(function(m) {
                 totalViews += (m.view_count || 0);
                 totalLikes += (m.like_count || 0);
             });
 
-            document.getElementById('statMedia').textContent = myMedia.length;
+            document.getElementById('statMedia').textContent = myMedia.data.length;
             document.getElementById('statViews').textContent = totalViews;
             document.getElementById('statLikes').textContent = totalLikes;
             document.getElementById('statFollowers').textContent = currentProfile.follower_count || 0;
@@ -185,13 +202,9 @@
         if (!currentUser) return;
         var container = document.getElementById('mediaList');
         try {
-            var { data, error } = await supabase
-                .from('media')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            if (error) throw error;
-            mediaCache = data || [];
+            var result = await supabase.from('media').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            if (result.error) throw result.error;
+            mediaCache = result.data || [];
 
             if (mediaCache.length === 0) {
                 container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox display-4"></i><p class="mt-2">No media yet. Start publishing!</p></div>';
@@ -222,6 +235,11 @@
         document.getElementById('profUsername').value = currentProfile.username || '';
         document.getElementById('profBio').value = currentProfile.bio || '';
         document.getElementById('profWebsite').value = currentProfile.website || '';
+
+        // Render follow button on own profile? No, this is creator dashboard.
+        // But we can show follower count prominently
+        var followerBadge = document.getElementById('followerBadge');
+        if (followerBadge) followerBadge.textContent = (currentProfile.follower_count || 0) + ' followers';
     }
 
     function showTab(name) {
@@ -230,7 +248,6 @@
         document.querySelectorAll('#dashTabs .nav-link').forEach(function(el) { el.classList.remove('active'); });
         var btn = document.querySelector('#dashTabs button[onclick*="' + name + '"]');
         if (btn) btn.classList.add('active');
-        // Reload tab content
         if (name === 'media') loadMyMedia();
         if (name === 'profile') loadProfile();
     }
@@ -251,7 +268,6 @@
         } else {
             preview.innerHTML = '<i class="bi bi-file-earmark-text display-6"></i> <span>' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)</span>';
         }
-        // Set URL to filename hint
         document.getElementById('pubFileUrl').value = file.name;
     };
 
@@ -313,13 +329,12 @@
             if (price) insertData.price = price;
             if (status === 'published') insertData.published_at = new Date().toISOString();
 
-            var { data, error } = await supabase.from('media').insert([insertData]).select();
-            if (error) throw error;
+            var result = await supabase.from('media').insert([insertData]).select();
+            if (result.error) throw result.error;
 
             showAlert('publishAlert', '<i class="bi bi-check-circle"></i> ' + (status === 'published' ? 'Published!' : 'Draft saved!'), 'success');
             document.getElementById('publishForm').reset();
             document.getElementById('filePreview').style.display = 'none';
-            // Refresh stats + media list
             loadStats();
             loadMyMedia();
         } catch (e) {
@@ -343,13 +358,13 @@
             var bio = document.getElementById('profBio').value.trim();
             var website = document.getElementById('profWebsite').value.trim();
 
-            var { error } = await supabase.from('users').update({
+            var result = await supabase.from('users').update({
                 display_name: displayName || currentProfile.display_name,
                 bio: bio,
                 website: website || null
             }).eq('id', currentUser.id);
 
-            if (error) throw error;
+            if (result.error) throw result.error;
             showAlert('profileAlert', '<i class="bi bi-check-circle"></i> Profile updated!', 'success');
         } catch (e) {
             showAlert('profileAlert', 'Error: ' + e.message, 'danger');
@@ -362,35 +377,32 @@
         var dashContent = document.getElementById('dashContent');
         var navUser = document.getElementById('navUser');
 
-        var { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) {
+        var result = await supabase.auth.getSession();
+        if (result.error || !result.data.session) {
             notAuthCard.style.display = '';
             dashContent.style.display = 'none';
             return;
         }
 
-        currentUser = session.user;
-        navUser.textContent = currentUser.user_metadata?.username || currentUser.email;
+        currentUser = result.data.session.user;
+        navUser.textContent = currentUser.user_metadata && currentUser.user_metadata.username ? currentUser.user_metadata.username : currentUser.email;
 
-        // Load profile
-        var { data: profiles } = await supabase.from('users').select('*').eq('id', currentUser.id).limit(1);
-        if (profiles && profiles.length > 0) {
-            currentProfile = profiles[0];
-            // Ensure is_creator
+        var profiles = await supabase.from('users').select('*').eq('id', currentUser.id).limit(1);
+        if (profiles.data && profiles.data.length > 0) {
+            currentProfile = profiles.data[0];
             if (!currentProfile.is_creator) {
                 await supabase.from('users').update({ is_creator: true }).eq('id', currentUser.id);
                 currentProfile.is_creator = true;
             }
         } else {
-            // Create profile on the fly
-            var { data: newProfile } = await supabase.from('users').insert([{
+            var newProfile = await supabase.from('users').insert([{
                 id: currentUser.id,
                 email: currentUser.email,
-                username: currentUser.user_metadata?.username || currentUser.email.split('@')[0],
-                display_name: currentUser.user_metadata?.username || currentUser.email.split('@')[0],
+                username: currentUser.user_metadata && currentUser.user_metadata.username ? currentUser.user_metadata.username : currentUser.email.split('@')[0],
+                display_name: currentUser.user_metadata && currentUser.user_metadata.username ? currentUser.user_metadata.username : currentUser.email.split('@')[0],
                 is_creator: true
             }]).select();
-            if (newProfile) currentProfile = newProfile[0];
+            if (newProfile.data) currentProfile = newProfile.data[0];
         }
 
         notAuthCard.style.display = 'none';
@@ -404,7 +416,7 @@
 
     // ---- Init ----
     function main() {
-        if (!loadEnv() || !initSupabase()) return;
+        if (!initSupabase()) return;
 
         supabase.auth.getSession().then(function(resp) {
             if (resp.data.session) {
@@ -416,7 +428,6 @@
 
         supabase.auth.onAuthStateChange(function(event, session) {
             if (event === 'SIGNED_IN') {
-                // No reload: just refresh the dashboard in-place
                 var modal = document.getElementById('authModal');
                 if (modal) modal.remove();
                 checkAuth();
