@@ -256,12 +256,15 @@
     function updateNavbar(user) {
         var navBtns = document.querySelector('.navbar .d-flex');
         if (!navBtns) return;
+        var creatorLink = document.getElementById('navCreatorLink');
         if (user) {
             navBtns.innerHTML = '<span class="text-light me-2"><i class="bi bi-person-circle"></i> ' + (user.user_metadata?.username || user.email) + '</span>' +
                 '<button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>';
+            if (creatorLink) creatorLink.style.display = '';
         } else {
             navBtns.innerHTML = '<button class="btn btn-outline-light me-2" onclick="login()">Login</button>' +
                 '<button class="btn btn-primary" onclick="signup()">Sign Up</button>';
+            if (creatorLink) creatorLink.style.display = 'none';
         }
     }
 
