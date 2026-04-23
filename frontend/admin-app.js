@@ -248,6 +248,23 @@
     window.login = function() { showAuthModal('login'); };
     window.signup = function() { showAuthModal('signup'); };
 
+    window.logout = function() {
+        supabase.auth.signOut().then(function() { window.location.reload(); });
+    };
+
+    // ---- Session / Navbar update ----
+    function updateNavbar(user) {
+        var navBtns = document.querySelector('.navbar .d-flex');
+        if (!navBtns) return;
+        if (user) {
+            navBtns.innerHTML = '<span class="text-light me-2"><i class="bi bi-person-circle"></i> ' + (user.user_metadata?.username || user.email) + '</span>' +
+                '<button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>';
+        } else {
+            navBtns.innerHTML = '<button class="btn btn-outline-light me-2" onclick="login()">Login</button>' +
+                '<button class="btn btn-primary" onclick="signup()">Sign Up</button>';
+        }
+    }
+
     // ---- Main ----
     function main() {
         if (!loadEnv()) {
@@ -255,6 +272,16 @@
             return;
         }
         if (!initSupabase()) return;
+
+        // Check existing session
+        supabase.auth.getSession().then(function(resp) {
+            updateNavbar(resp.data.session ? resp.data.session.user : null);
+        });
+
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange(function(event, session) {
+            updateNavbar(session ? session.user : null);
+        });
 
         var mediaContainer = document.getElementById('mediaContainer');
         var creatorsContainer = document.getElementById('creatorsContainer');
