@@ -511,6 +511,10 @@ async function loadStream() {
   c.innerHTML = '<div class="loading-pulse"><div class="sk-chase"><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div><div class="sk-chase-dot"></div></div></div>';
 
   try {
+    // Timeout di sicurezza: se dopo 15s la query non torna, mostra errore
+    const ac = new AbortController();
+    const timeout = setTimeout(() => { ac.abort(); }, 15000);
+
     let q = _sb.from('drops')
       .select('*, users!inner(id,username,email)')
       .eq('status','active')
@@ -520,6 +524,7 @@ async function loadStream() {
     if (filter !== 'all') q = q.eq('drop_type', filter);
 
     const r = await q;
+    clearTimeout(timeout);
     if (r.error) throw r.error;
 
     drops = r.data || [];
@@ -529,8 +534,10 @@ async function loadStream() {
     if (viewMode === 'echo') renderEchoView();
     else renderStream(c);
   } catch(e) {
-    console.error('[Drip]', e);
-    c.innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><p>'+e.message+'</p></div>';
+    console.error('[Drip] loadStream error:', e);
+    const msg = e?.message || e?.error_description || e?.toString?.() || 'Unknown error';
+    c.innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><p style="color:#ff6b6b;font-size:0.85rem;">'+msg.replace(/</g,'&lt;')+'</p>'+
+      '<p style="color:var(--text-muted);font-size:0.8rem;margin-top:8px;">Check console (F12) for details</p></div>';
   }
 }
 
