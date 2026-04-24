@@ -305,7 +305,7 @@ function renderEchoView() {
       icon: d.icon || info.icon,
       opacity,
       speed: 0.12 + Math.random() * 0.15,
-      name: (d.users?.username || d.users?.email || 'anon').substring(0, 12),
+      name: 'drop-user',
       engagement,
       ageHrs,
       pulsePhase: Math.random() * Math.PI * 2,
@@ -515,8 +515,9 @@ async function loadStream() {
     const ac = new AbortController();
     const timeout = setTimeout(() => { ac.abort(); }, 15000);
 
+    // Prova prima la query semplice senza join
     let q = _sb.from('drops')
-      .select('*, users!inner(id,username,email)')
+      .select('*')
       .eq('status','active')
       .order('dropped_at', {ascending:false})
       .limit(50);
@@ -549,8 +550,7 @@ function renderStream(c) {
   }
   c.innerHTML = drops.map(d => {
     const info = TYPES[d.drop_type] || TYPES.moment;
-    const u = d.users || {};
-    const uname = u.username || u.email || 'anon';
+    const uname = 'drop-user';
     const init = (uname.charAt(0)||'?').toUpperCase();
     let media = '';
     if (d.media_url && d.drop_type==='snapshot')
@@ -610,7 +610,7 @@ async function showDetail(id) {
   try {
     const r = await _sb.from('drops').select('*, users!inner(id,username,email)').eq('id',id).single();
     if (r.error) throw r.error;
-    const d = r.data, u = d.users||{}, uname = u.username||u.email||'anon';
+    const d = r.data, uname = 'drop-user';
     const info = TYPES[d.drop_type]||TYPES.moment;
     b.innerHTML =
       '<div class="dc-head mb-2">'+
