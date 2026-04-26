@@ -4,7 +4,7 @@
 const SUPABASE_URL = 'https://lftlvycvgauzrryyqxpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdGx2eWN2Z2F1enJyeXlxeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NTY2MTksImV4cCI6MjA5MjMzMjYxOX0.rO4T1MAmrVr78gl6Bnh5sNqqh7aiGupZNRuIGZBmU2s';
 
-const _sb = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _sb = (typeof supabaseClient !== 'undefined' ? supabaseClient : supabase).createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const TYPES = {
   snapshot: { icon:'🖼', color:'#f59e0b', label:'Snapshot', desc:'Image' },
